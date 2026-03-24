@@ -142,38 +142,47 @@ export default function App() {
     let isMounted = true;
     let unsubscribe: (() => void) | null = null;
 
+    console.log('App mounted, initializing session...');
+
     const initializeSession = async () => {
       try {
-        // Try to get session with timeout
-        const { data, error } = await getSessionWithTimeout(5000);
+        console.log('Calling getSessionWithTimeout...');
+        const result = await getSessionWithTimeout(8000);
         
-        if (!isMounted) return;
+        if (!isMounted) {
+          console.log('Component unmounted, skipping state update');
+          return;
+        }
+        
+        const { data, error } = result;
+        console.log('Session result:', { hasData: !!data, hasError: !!error });
         
         if (error) {
           console.error("Get session error:", error);
-          setSessionError(true);
+          setSessionError(false); // Don't show error for missing session
           setUser(null);
         } else {
-          setUser(data?.session?.user ?? null);
+          const user = data?.session?.user ?? null;
+          console.log('User from session:', { hasUser: !!user });
+          setUser(user);
           setSessionError(false);
         }
       } catch (err) {
         if (!isMounted) return;
         console.error("Session initialization failed:", err);
-        setSessionError(true);
+        setSessionError(false); // Don't show error for network issues
         setUser(null);
       } finally {
         if (isMounted) {
+          console.log('Setting loading to false');
           setLoading(false);
         }
       }
     };
 
-    // Initialize session
-    initializeSession();
-
-    // Set up auth state change listener
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Set up auth state change listener FIRST
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', { event, hasSession: !!session });
       if (isMounted) {
         setUser(session?.user ?? null);
         setSessionError(false);
@@ -182,8 +191,12 @@ export default function App() {
     });
     unsubscribe = data?.subscription?.unsubscribe;
 
+    // Then try to get initial session
+    initializeSession();
+
     // Cleanup
     return () => {
+      console.log('Cleaning up auth effect');
       isMounted = false;
       if (unsubscribe) {
         unsubscribe();
@@ -299,43 +312,50 @@ export default function App() {
   return (
     <div style={{ padding: "40px", fontSize: "20px" }}>
       {loading ? (
-        <div>
-          <h2>加载中...</h2>
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <h2>⏳ 加载中...</h2>
           <p>正在初始化应用，请稍候...</p>
-        </div>
-      ) : sessionError ? (
-        <div style={{ color: "red", padding: "20px", border: "1px solid red", borderRadius: "4px" }}>
-          <h2>连接错误</h2>
-          <p>无法连接到服务器，请检查：</p>
-          <ul>
-            <li>网络连接是否正常</li>
-            <li>.env.local 文件中的 Supabase 凭证是否正确</li>
-            <li>Supabase 服务是否在线</li>
-          </ul>
-          <button onClick={() => window.location.reload()}>重新加载</button>
+          <p style={{ fontSize: "14px", color: "#666" }}>（或打开浏览器控制台查看详情）</p>
         </div>
       ) : !user ? (
         <div>
           <h1>登录到时间管理器</h1>
-          <input
-            type="email"
-            placeholder="邮箱"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="密码"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ marginLeft: "10px" }}
-          />
-          <button onClick={isLogin ? signIn : signUp} style={{ marginLeft: "10px" }}>
+          <div style={{ marginBottom: "20px" }}>
+            <input
+              type="email"
+              placeholder="邮箱"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{ padding: "10px", width: "200px" }}
+            />
+          </div>
+          <div style={{ marginBottom: "20px" }}>
+            <input
+              type="password"
+              placeholder="密码"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{ padding: "10px", width: "200px" }}
+            />
+          </div>
+          <button onClick={isLogin ? signIn : signUp} style={{ padding: "10px 20px", marginRight: "10px" }}>
             {isLogin ? "登录" : "注册"}
           </button>
-          <button onClick={() => setIsLogin(!isLogin)} style={{ marginLeft: "10px" }}>
-            {isLogin ? "切换到注册" : "切换到登录"}
+          <button onClick={() => setIsLogin(!isLogin)} style={{ padding: "10px 20px" }}>
+            {isLogin ? "需要注册？" : "已有账户？"}
           </button>
+          {sessionError && (
+            <div style={{ color: "red", padding: "20px", marginTop: "20px", border: "1px solid red", borderRadius: "4px" }}>
+              <p><strong>连接错误：</strong></p>
+              <p>无法连接到服务器，请检查：</p>
+              <ul>
+                <li>网络连接是否正常</li>
+                <li>.env.local 文件中的 Supabase 凭证是否正确</li>
+                <li>Supabase 服务是否在线</li>
+              </ul>
+              <button onClick={() => window.location.reload()}>重新加载</button>
+            </div>
+          )}
         </div>
       ) : (
         <>
