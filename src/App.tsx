@@ -37,6 +37,7 @@ export default function App() {
   const [energy, setEnergy] = useState<number>(100);
 
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
@@ -59,62 +60,100 @@ export default function App() {
   const [newScheduleProgress, setNewScheduleProgress] = useState(0);
 
   async function fetchCourses() {
-    const { data, error } = await supabase.from("courses").select("*");
-    if (error) console.error("Error fetching courses:", error);
-    else setCourses(data || []);
+    try {
+      const { data, error } = await supabase.from("courses").select("*");
+      if (error) console.error("Error fetching courses:", error);
+      else setCourses(data || []);
+    } catch (err) {
+      console.error("Fetch courses failed:", err);
+    }
   }
 
   async function fetchTasks() {
-    const { data, error } = await supabase.from("tasks").select("*");
-    if (error) console.error("Error fetching tasks:", error);
-    else setTasks(data || []);
+    try {
+      const { data, error } = await supabase.from("tasks").select("*");
+      if (error) console.error("Error fetching tasks:", error);
+      else setTasks(data || []);
+    } catch (err) {
+      console.error("Fetch tasks failed:", err);
+    }
   }
 
   async function fetchLogs() {
-    const { data, error } = await supabase.from("logs").select("*");
-    if (error) console.error("Error fetching logs:", error);
-    else setLogs(data || []);
+    try {
+      const { data, error } = await supabase.from("logs").select("*");
+      if (error) console.error("Error fetching logs:", error);
+      else setLogs(data || []);
+    } catch (err) {
+      console.error("Fetch logs failed:", err);
+    }
   }
 
   async function fetchSchedule() {
-    const { data, error } = await supabase.from("schedule").select("*");
-    if (error) console.error("Error fetching schedule:", error);
-    else setSchedule(data || []);
+    try {
+      const { data, error } = await supabase.from("schedule").select("*");
+      if (error) console.error("Error fetching schedule:", error);
+      else setSchedule(data || []);
+    } catch (err) {
+      console.error("Fetch schedule failed:", err);
+    }
   }
 
   async function signIn() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message);
-    else {
-      setEmail("");
-      setPassword("");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) alert(error.message);
+      else {
+        setEmail("");
+        setPassword("");
+      }
+    } catch (err) {
+      console.error("Sign in failed:", err);
+      alert("登录失败，请检查网络连接");
     }
   }
 
   async function signUp() {
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) alert(error.message);
-    else {
-      alert("Check your email for confirmation!");
-      setEmail("");
-      setPassword("");
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) alert(error.message);
+      else {
+        alert("Check your email for confirmation!");
+        setEmail("");
+        setPassword("");
+      }
+    } catch (err) {
+      console.error("Sign up failed:", err);
+      alert("注册失败，请检查网络连接");
     }
   }
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) alert(error.message);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) alert(error.message);
+    } catch (err) {
+      console.error("Sign out failed:", err);
+    }
   }
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+      } catch (err) {
+        console.error("Get session failed:", err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -227,7 +266,9 @@ export default function App() {
 
   return (
     <div style={{ padding: "40px", fontSize: "20px" }}>
-      {!user ? (
+      {loading ? (
+        <div>加载中...</div>
+      ) : !user ? (
         <div>
           <h1>登录到时间管理器</h1>
           <input
