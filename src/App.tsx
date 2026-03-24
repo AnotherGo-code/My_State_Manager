@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "./supabaseClient";
+import { supabase, getSessionWithTimeout } from "./supabaseClient";
 import type { User } from "@supabase/supabase-js";
 
 interface Course {
@@ -38,6 +38,7 @@ export default function App() {
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionError, setSessionError] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
@@ -138,25 +139,56 @@ export default function App() {
   }
 
   useEffect(() => {
-    const getSession = async () => {
+    let isMounted = true;
+    let unsubscribe: (() => void) | null = null;
+
+    const initializeSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
+        // Try to get session with timeout
+        const { data, error } = await getSessionWithTimeout(5000);
+        
+        if (!isMounted) return;
+        
+        if (error) {
+          console.error("Get session error:", error);
+          setSessionError(true);
+          setUser(null);
+        } else {
+          setUser(data?.session?.user ?? null);
+          setSessionError(false);
+        }
       } catch (err) {
-        console.error("Get session failed:", err);
+        if (!isMounted) return;
+        console.error("Session initialization failed:", err);
+        setSessionError(true);
         setUser(null);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
-    getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+    // Initialize session
+    initializeSession();
+
+    // Set up auth state change listener
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setUser(session?.user ?? null);
+        setSessionError(false);
+        setLoading(false);
+      }
     });
+    unsubscribe = data?.subscription?.unsubscribe;
 
-    return () => subscription.unsubscribe();
+    // Cleanup
+    return () => {
+      isMounted = false;
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -267,7 +299,21 @@ export default function App() {
   return (
     <div style={{ padding: "40px", fontSize: "20px" }}>
       {loading ? (
-        <div>加载中...</div>
+        <div>
+          <h2>加载中...</h2>
+          <p>正在初始化应用，请稍候...</p>
+        </div>
+      ) : sessionError ? (
+        <div style={{ color: "red", padding: "20px", border: "1px solid red", borderRadius: "4px" }}>
+          <h2>连接错误</h2>
+          <p>无法连接到服务器，请检查：</p>
+          <ul>
+            <li>网络连接是否正常</li>
+            <li>.env.local 文件中的 Supabase 凭证是否正确</li>
+            <li>Supabase 服务是否在线</li>
+          </ul>
+          <button onClick={() => window.location.reload()}>重新加载</button>
+        </div>
       ) : !user ? (
         <div>
           <h1>登录到时间管理器</h1>
