@@ -32,9 +32,6 @@ interface ScheduleItem {
 }
 
 export default function App() {
-  const [time, setTime] = useState<number>(10);
-  const [energy, setEnergy] = useState<number>(100);
-
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionError, setSessionError] = useState(false);
@@ -338,23 +335,6 @@ export default function App() {
     }
   }
 
-  function study() {
-    if (time <= 0 || energy <= 0) return;
-    setTime((prev) => Math.max(0, prev - 1));
-    setEnergy((prev) => Math.max(0, prev - 10));
-  }
-
-  function rest() {
-    if (time <= 0) return;
-    setTime((prev) => Math.max(0, prev - 1));
-    setEnergy((prev) => Math.min(100, prev + 20));
-  }
-
-  function reset() {
-    setTime(10);
-    setEnergy(100);
-  }
-
   return (
     <div style={{ padding: "40px", fontSize: "20px" }}>
       {loading ? (
@@ -412,21 +392,6 @@ export default function App() {
               <button onClick={signOut}>登出</button>
             </div>
           </div>
-
-          <p>⏰ 时间：{time}</p>
-          <p>⚡ 精力：{energy}</p>
-
-          <button onClick={study} disabled={time <= 0 || energy <= 0}>
-            学习
-          </button>
-          <button onClick={rest} disabled={time <= 0} style={{ marginLeft: "10px" }}>
-            休息
-          </button>
-          <button onClick={reset} style={{ marginLeft: "10px" }}>
-            重置
-          </button>
-
-          {time <= 0 && <p style={{ color: "red", marginTop: "16px" }}>时间耗尽，请重置</p>}
 
           <hr style={{ margin: "40px 0" }} />
 
