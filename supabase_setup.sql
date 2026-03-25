@@ -5,13 +5,16 @@ CREATE TABLE IF NOT EXISTS courses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tasks table (existing, add progress if not exists)
+-- Tasks table (existing, add progress and user_id if not exists)
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS progress INTEGER DEFAULT 0;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- Logs table (existing)
+-- Logs table (existing, add user_id if not exists)
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
 
 -- Schedule table (new)
 CREATE TABLE IF NOT EXISTS schedule (
@@ -21,32 +24,35 @@ CREATE TABLE IF NOT EXISTS schedule (
   endTime TEXT NOT NULL,
   taskId UUID REFERENCES tasks(id) ON DELETE SET NULL,
   progressIncrement INTEGER DEFAULT 0,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS if needed
+-- Enable RLS
 ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schedule ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for authenticated users
-CREATE POLICY "Users can view their own courses" ON courses FOR SELECT USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can insert their own courses" ON courses FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can update their own courses" ON courses FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can delete their own courses" ON courses FOR DELETE USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can view their own courses" ON courses FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own courses" ON courses FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own courses" ON courses FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own courses" ON courses FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own tasks" ON tasks FOR SELECT USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can insert their own tasks" ON tasks FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can update their own tasks" ON tasks FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can delete their own tasks" ON tasks FOR DELETE USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can view their own tasks" ON tasks FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own tasks" ON tasks FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own tasks" ON tasks FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own tasks" ON tasks FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own logs" ON logs FOR SELECT USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can insert their own logs" ON logs FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can update their own logs" ON logs FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can delete their own logs" ON logs FOR DELETE USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can view their own logs" ON logs FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own logs" ON logs FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own logs" ON logs FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own logs" ON logs FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own schedule" ON schedule FOR SELECT USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can insert their own schedule" ON schedule FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can view their own schedule" ON schedule FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own schedule" ON schedule FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own schedule" ON schedule FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own schedule" ON schedule FOR DELETE USING (auth.uid() = user_id);
 CREATE POLICY "Users can update their own schedule" ON schedule FOR UPDATE USING (auth.uid() IS NOT NULL);
 CREATE POLICY "Users can delete their own schedule" ON schedule FOR DELETE USING (auth.uid() IS NOT NULL);

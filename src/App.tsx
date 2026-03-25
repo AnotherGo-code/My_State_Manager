@@ -215,7 +215,11 @@ export default function App() {
 
   async function addCourse() {
     if (!newCourseName.trim()) return;
-    const { error } = await supabase.from("courses").insert([{ name: newCourseName, description: newCourseDesc }]);
+    const { error } = await supabase.from("courses").insert([{ 
+      name: newCourseName, 
+      description: newCourseDesc,
+      user_id: user?.id 
+    }]);
     if (error) console.error("Error adding course:", error);
     else {
       setNewCourseName("");
@@ -226,9 +230,16 @@ export default function App() {
 
   async function addTask() {
     if (!newTaskTitle.trim()) return;
-    const { error } = await supabase.from("tasks").insert([{ title: newTaskTitle }]);
-    if (error) console.error("Error adding task:", error);
-    else {
+    console.log("Adding task:", newTaskTitle);
+    const { data, error } = await supabase.from("tasks").insert([{ 
+      title: newTaskTitle,
+      user_id: user?.id 
+    }]);
+    console.log("Add task result:", { data, error });
+    if (error) {
+      console.error("Error adding task:", error);
+      alert(`添加任务失败: ${error.message}`);
+    } else {
       setNewTaskTitle("");
       fetchTasks();
     }
@@ -254,9 +265,16 @@ export default function App() {
 
   async function addLog() {
     if (!newLogContent.trim()) return;
-    const { error } = await supabase.from("logs").insert([{ content: newLogContent }]);
-    if (error) console.error("Error adding log:", error);
-    else {
+    console.log("Adding log:", newLogContent);
+    const { data, error } = await supabase.from("logs").insert([{ 
+      content: newLogContent,
+      user_id: user?.id 
+    }]);
+    console.log("Add log result:", { data, error });
+    if (error) {
+      console.error("Error adding log:", error);
+      alert(`添加日志失败: ${error.message}`);
+    } else {
       setNewLogContent("");
       fetchLogs();
     }
@@ -275,20 +293,50 @@ export default function App() {
 
   async function addSchedule() {
     if (!newScheduleStart.trim() || !newScheduleEnd.trim()) return;
-    const { error } = await supabase.from("schedule").insert([{
+    console.log("Adding schedule:", { day: newScheduleDay, startTime: newScheduleStart, endTime: newScheduleEnd, taskId: newScheduleTaskId, progressIncrement: newScheduleProgress });
+    const { data, error } = await supabase.from("schedule").insert([{
       day: newScheduleDay,
       startTime: newScheduleStart,
       endTime: newScheduleEnd,
       taskId: newScheduleTaskId || null,
-      progressIncrement: newScheduleProgress
+      progressIncrement: newScheduleProgress,
+      user_id: user?.id
     }]);
-    if (error) console.error("Error adding schedule:", error);
-    else {
+    console.log("Add schedule result:", { data, error });
+    if (error) {
+      console.error("Error adding schedule:", error);
+      alert(`添加日程失败: ${error.message}`);
+    } else {
       setNewScheduleStart("");
       setNewScheduleEnd("");
       setNewScheduleTaskId("");
       setNewScheduleProgress(0);
       fetchSchedule();
+    }
+  }
+
+  async function testDatabaseConnection() {
+    console.log("Testing database connection...");
+    
+    try {
+      // Test tasks table
+      const { data: tasksData, error: tasksError } = await supabase.from("tasks").select("*").limit(1);
+      console.log("Tasks table test:", { data: tasksData, error: tasksError });
+      
+      // Test logs table
+      const { data: logsData, error: logsError } = await supabase.from("logs").select("*").limit(1);
+      console.log("Logs table test:", { data: logsData, error: logsError });
+      
+      // Test schedule table
+      const { data: scheduleData, error: scheduleError } = await supabase.from("schedule").select("*").limit(1);
+      console.log("Schedule table test:", { data: scheduleData, error: scheduleError });
+      
+      // Test auth
+      const { data: authData, error: authError } = await supabase.auth.getSession();
+      console.log("Auth test:", { session: authData?.session, error: authError });
+      
+    } catch (err) {
+      console.error("Database test failed:", err);
     }
   }
 
@@ -361,7 +409,10 @@ export default function App() {
         <>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h1>起居注 My State Manager</h1>
-            <button onClick={signOut}>登出</button>
+            <div>
+              <button onClick={testDatabaseConnection} style={{ marginRight: "10px" }}>测试数据库</button>
+              <button onClick={signOut}>登出</button>
+            </div>
           </div>
 
           <p>⏰ 时间：{time}</p>
