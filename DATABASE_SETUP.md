@@ -12,7 +12,7 @@
 
 ### 步骤 1: 设置 Supabase 数据库
 
-1. 登录到您的 Supabase 控制台：https://supabase.com/dashboard
+1. 登录到您的 Supabase 控制台：<https://supabase.com/dashboard>
 2. 选择您的项目
 3. 进入 **SQL Editor**
 4. 复制并运行项目中的 `supabase_setup.sql` 文件内容
@@ -32,14 +32,17 @@
 ## 常见错误
 
 ### "permission denied for table"
+
 - 原因：RLS 策略阻止访问
 - 解决：确保运行了完整的 `supabase_setup.sql`
 
 ### "relation does not exist"
+
 - 原因：表不存在
 - 解决：运行 `supabase_setup.sql` 创建表
 
 ### "user_id is required"
+
 - 原因：代码中缺少用户ID
 - 解决：确保已登录用户
 
@@ -47,5 +50,4 @@
 
 - **测试数据库按钮**：检查数据库连接
 - **浏览器控制台**：查看详细错误信息
-- **Supabase 日志**：在控制台查看数据库操作日志</content>
-<parameter name="filePath">d:\Project\My_State_Manager\DATABASE_SETUP.md
+- **Supabase 日志**：在控制台查看数据库操作日志d:\Project\My_State_Manager\DATABASE_SETUP.md

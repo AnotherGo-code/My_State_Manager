@@ -1,7 +1,8 @@
--- Create tables for the time management app
+-- 扩展
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Courses table (existing)
-CREATE TABLE IF NOT EXISTS courses (
+-- Courses
+CREATE TABLE courses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -9,50 +10,66 @@ CREATE TABLE IF NOT EXISTS courses (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tasks table (existing, add progress and user_id if not exists)
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS progress INTEGER DEFAULT 0;
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
-
--- Logs table (existing, add user_id if not exists)
-ALTER TABLE logs ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
-
--- Schedule table (new)
-CREATE TABLE IF NOT EXISTS schedule (
+-- Tasks
+CREATE TABLE tasks (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  day TEXT NOT NULL CHECK (day IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')),
-  startTime TEXT NOT NULL,
-  endTime TEXT NOT NULL,
-  taskId UUID REFERENCES tasks(id) ON DELETE SET NULL,
-  progressIncrement INTEGER DEFAULT 0,
+  name TEXT NOT NULL,
+  progress INTEGER DEFAULT 0,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS
+-- Logs
+CREATE TABLE logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  content TEXT,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Schedule
+CREATE TABLE schedule (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  day TEXT NOT NULL,
+  start_time TEXT NOT NULL,
+  end_time TEXT NOT NULL,
+  task_id UUID REFERENCES tasks(id) ON DELETE SET NULL,
+  progress_increment INTEGER DEFAULT 0,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 开启 RLS
 ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schedule ENABLE ROW LEVEL SECURITY;
 
--- Create policies for authenticated users
-CREATE POLICY "Users can view their own courses" ON courses FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own courses" ON courses FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own courses" ON courses FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own courses" ON courses FOR DELETE USING (auth.uid() = user_id);
+-- Policies（安全写法）
+-- Courses
+DROP POLICY IF EXISTS courses_select ON courses;
+CREATE POLICY courses_select ON courses FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own tasks" ON tasks FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own tasks" ON tasks FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own tasks" ON tasks FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own tasks" ON tasks FOR DELETE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS courses_insert ON courses;
+CREATE POLICY courses_insert ON courses FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own logs" ON logs FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own logs" ON logs FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own logs" ON logs FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own logs" ON logs FOR DELETE USING (auth.uid() = user_id);
+-- Tasks
+DROP POLICY IF EXISTS tasks_select ON tasks;
+CREATE POLICY tasks_select ON tasks FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own schedule" ON schedule FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own schedule" ON schedule FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own schedule" ON schedule FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own schedule" ON schedule FOR DELETE USING (auth.uid() = user_id);
-CREATE POLICY "Users can update their own schedule" ON schedule FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Users can delete their own schedule" ON schedule FOR DELETE USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS tasks_insert ON tasks;
+CREATE POLICY tasks_insert ON tasks FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Logs
+DROP POLICY IF EXISTS logs_select ON logs;
+CREATE POLICY logs_select ON logs FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS logs_insert ON logs;
+CREATE POLICY logs_insert ON logs FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Schedule
+DROP POLICY IF EXISTS schedule_select ON schedule;
+CREATE POLICY schedule_select ON schedule FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS schedule_insert ON schedule;
+CREATE POLICY schedule_insert ON schedule FOR INSERT WITH CHECK (auth.uid() = user_id);

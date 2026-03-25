@@ -11,8 +11,7 @@ interface Course {
 
 interface Task {
   id: string;
-  title: string;
-  completed: boolean;
+  name: string;
   progress: number;
   created_at: string;
 }
@@ -26,10 +25,10 @@ interface Log {
 interface ScheduleItem {
   id: string;
   day: string; // 'Monday', 'Tuesday', etc.
-  startTime: string; // '13:00'
-  endTime: string; // '15:00'
-  taskId: string | null;
-  progressIncrement: number; // 推进进度的小节数
+  start_time: string; // '13:00'
+  end_time: string; // '15:00'
+  task_id: string | null;
+  progress_increment: number; // 推进进度的小节数
 }
 
 export default function App() {
@@ -52,7 +51,7 @@ export default function App() {
 
   const [newCourseName, setNewCourseName] = useState("");
   const [newCourseDesc, setNewCourseDesc] = useState("");
-  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskName, setNewTaskName] = useState("");
   const [newLogContent, setNewLogContent] = useState("");
   const [newScheduleDay, setNewScheduleDay] = useState("Monday");
   const [newScheduleStart, setNewScheduleStart] = useState("");
@@ -229,10 +228,10 @@ export default function App() {
   }
 
   async function addTask() {
-    if (!newTaskTitle.trim()) return;
-    console.log("Adding task:", newTaskTitle);
+    if (!newTaskName.trim()) return;
+    console.log("Adding task:", newTaskName);
     const { data, error } = await supabase.from("tasks").insert([{ 
-      title: newTaskTitle,
+      name: newTaskName,
       user_id: user?.id 
     }]);
     console.log("Add task result:", { data, error });
@@ -240,15 +239,14 @@ export default function App() {
       console.error("Error adding task:", error);
       alert(`添加任务失败: ${error.message}`);
     } else {
-      setNewTaskTitle("");
+      setNewTaskName("");
       fetchTasks();
     }
   }
 
   async function toggleTask(id: string, completed: boolean) {
-    const { error } = await supabase.from("tasks").update({ completed: !completed }).eq("id", id);
-    if (error) console.error("Error updating task:", error);
-    else fetchTasks();
+    const newProgress = completed ? 0 : 100;
+    await updateTaskProgress(id, newProgress);
   }
 
   async function deleteTask(id: string) {
@@ -293,13 +291,13 @@ export default function App() {
 
   async function addSchedule() {
     if (!newScheduleStart.trim() || !newScheduleEnd.trim()) return;
-    console.log("Adding schedule:", { day: newScheduleDay, startTime: newScheduleStart, endTime: newScheduleEnd, taskId: newScheduleTaskId, progressIncrement: newScheduleProgress });
+    console.log("Adding schedule:", { day: newScheduleDay, start_time: newScheduleStart, end_time: newScheduleEnd, task_id: newScheduleTaskId, progress_increment: newScheduleProgress });
     const { data, error } = await supabase.from("schedule").insert([{
       day: newScheduleDay,
-      startTime: newScheduleStart,
-      endTime: newScheduleEnd,
-      taskId: newScheduleTaskId || null,
-      progressIncrement: newScheduleProgress,
+      start_time: newScheduleStart,
+      end_time: newScheduleEnd,
+      task_id: newScheduleTaskId || null,
+      progress_increment: newScheduleProgress,
       user_id: user?.id
     }]);
     console.log("Add schedule result:", { data, error });
@@ -458,9 +456,9 @@ export default function App() {
       <h2>任务列表</h2>
       <input
         type="text"
-        placeholder="任务标题"
-        value={newTaskTitle}
-        onChange={(e) => setNewTaskTitle(e.target.value)}
+        placeholder="任务名称"
+        value={newTaskName}
+        onChange={(e) => setNewTaskName(e.target.value)}
       />
       <button onClick={addTask} style={{ marginLeft: "10px" }}>添加任务</button>
       <ul>
@@ -468,10 +466,10 @@ export default function App() {
           <li key={task.id}>
             <input
               type="checkbox"
-              checked={task.completed}
-              onChange={() => toggleTask(task.id, task.completed)}
+              checked={task.progress >= 100}
+              onChange={() => toggleTask(task.id, task.progress >= 100)}
             />
-            <strong>{task.title}</strong> - 进度: {task.progress}%
+            <strong>{task.name}</strong> - 进度: {task.progress}%
             <input
               type="range"
               min="0"
@@ -505,7 +503,7 @@ export default function App() {
       />
       <select value={newScheduleTaskId} onChange={(e) => setNewScheduleTaskId(e.target.value)} style={{ marginLeft: "10px" }}>
         <option value="">选择任务</option>
-        {tasks.map(task => <option key={task.id} value={task.id}>{task.title}</option>)}
+        {tasks.map(task => <option key={task.id} value={task.id}>{task.name}</option>)}
       </select>
       <input
         type="number"
@@ -522,15 +520,15 @@ export default function App() {
             <h3>{day}</h3>
             <ul>
               {schedule.filter(item => item.day === day).map(item => {
-                const task = tasks.find(t => t.id === item.taskId);
+                const task = tasks.find(t => t.id === item.task_id);
                 return (
                   <li key={item.id} style={{ marginBottom: '5px' }}>
                     <button
-                      onClick={() => item.taskId && completeScheduleTask(item.taskId, item.progressIncrement)}
-                      disabled={!item.taskId}
+                      onClick={() => item.task_id && completeScheduleTask(item.task_id, item.progress_increment)}
+                      disabled={!item.task_id}
                       style={{ width: '100%', textAlign: 'left' }}
                     >
-                      {item.startTime} - {item.endTime}: {task ? task.title : '无任务'} (推进 {item.progressIncrement} 小节)
+                      {item.start_time} - {item.end_time}: {task ? task.name : '无任务'} (推进 {item.progress_increment} 小节)
                     </button>
                   </li>
                 );
