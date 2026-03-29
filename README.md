@@ -58,7 +58,7 @@ pnpm preview
 
 ## 📁 项目结构
 
-```
+```py
 src/
 ├── App.tsx              # 主应用组件
 ├── App.css              # 应用样式
