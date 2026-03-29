@@ -171,14 +171,14 @@ export default function App() {
     }
   }
 
-  async function signOut() {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) alert(error.message);
-    } catch (err) {
-      console.error("Sign out failed:", err);
-    }
-  }
+  // async function signOut() {
+  //   try {
+  //     const { error } = await supabase.auth.signOut();
+  //     if (error) alert(error.message);
+  //   } catch (err) {
+  //     console.error("Sign out failed:", err);
+  //   }
+  // }
 
   useEffect(() => {
     let isMounted = true;
@@ -409,16 +409,18 @@ export default function App() {
         <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
           {/* 顶部 Header */}
           <header style={{
+            height: "80px",
             backgroundColor: "#fff",
             borderBottom: "1px solid #e5e7eb",
-            padding: "12px 24px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            padding: "0 24px",
             boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
           }}>
+            {/* 左侧：学校名称、用户头像、用户名 */}
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <h1 style={{ margin: 0, color: "#1f2937", fontSize: "24px", fontWeight: "600" }}>
+              <h1 style={{ margin: 0, color: "#1f2937", fontSize: "24px", fontWeight: "600", cursor: "pointer" }}>
                 时间管理器
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -427,95 +429,146 @@ export default function App() {
                   alt="头像"
                   style={{ width: "32px", height: "32px", borderRadius: "50%" }}
                 />
-                <span style={{ color: "#6b7280" }}>{user.email}</span>
+                <span style={{ color: "#6b7280", cursor: "pointer" }}>{user.email}</span>
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <span style={{ color: "#6b7280" }}>第 1 周</span>
+            {/* 中间：周数和日期范围 */}
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "600", color: "#1f2937" }}>Week 1</div>
+              <div style={{ fontSize: "14px", color: "#6b7280" }}>2026.03.23 ~ 2026.03.29</div>
+              <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px", fontStyle: "italic" }}>
+                "今日事，今日毕"
+              </div>
+            </div>
+
+            {/* 右侧：Calendar按钮 */}
+            <div>
               <button
                 onClick={() => setShowCalendar(!showCalendar)}
                 style={{
-                  padding: "8px 12px",
+                  padding: "8px 16px",
                   backgroundColor: "#f3f4f6",
                   border: "1px solid #d1d5db",
                   borderRadius: "6px",
-                  cursor: "pointer"
+                  cursor: "pointer",
+                  fontSize: "14px"
                 }}
               >
                 📅 Calendar
               </button>
-              <button
-                onClick={signOut}
-                style={{
-                  padding: "8px 12px",
-                  backgroundColor: "#dc2626",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer"
-                }}
-              >
-                登出
-              </button>
             </div>
           </header>
 
-          {/* 主内容区域 */}
+          {/* 主内容区域：3列布局 */}
           <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-            {/* 左侧 Diary 区域 */}
+            {/* 左侧边栏：课程 + Diary */}
             <div style={{
-              width: "300px",
+              width: "20%",
               backgroundColor: "#f9fafb",
               borderRight: "1px solid #e5e7eb",
-              padding: "20px",
-              overflowY: "auto"
+              display: "flex",
+              flexDirection: "column"
             }}>
-              <h3 style={{ marginTop: 0, color: "#1f2937" }}>📝 日志</h3>
-              <div style={{ marginBottom: "20px" }}>
-                <textarea
-                  placeholder="添加日志条目..."
-                  value={newDiaryEntry}
-                  onChange={(e) => setNewDiaryEntry(e.target.value)}
-                  rows={3}
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "4px",
-                    resize: "vertical"
-                  }}
-                />
-                <button
-                  onClick={() => {/* TODO: 添加日志条目 */}}
-                  style={{
-                    marginTop: "8px",
-                    padding: "6px 12px",
-                    backgroundColor: "#10b981",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  }}
-                >
-                  添加
-                </button>
+              {/* 课程区域 */}
+              <div style={{ padding: "20px", borderBottom: "1px solid #e5e7eb" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <h3 style={{ margin: 0, color: "#1f2937", fontSize: "18px" }}>📚 Courses</h3>
+                  <button
+                    onClick={() => setEditingCourse({} as Course)}
+                    style={{
+                      padding: "4px 8px",
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "12px"
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {courses.map(course => (
+                    <div
+                      key={course.id}
+                      onClick={() => setEditingCourse(course)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "8px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb"
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          backgroundColor: course.color
+                        }}
+                      />
+                      <span style={{ fontSize: "14px", color: "#374151" }}>{course.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div>
-                <h4 style={{ marginBottom: "10px", color: "#374151" }}>
+              {/* Diary区域 */}
+              <div style={{ flex: 1, padding: "20px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <h3 style={{ margin: 0, marginBottom: "12px", color: "#1f2937", fontSize: "18px" }}>📝 Diary</h3>
+                <div style={{ marginBottom: "12px" }}>
+                  <textarea
+                    placeholder="添加日志条目..."
+                    value={newDiaryEntry}
+                    onChange={(e) => setNewDiaryEntry(e.target.value)}
+                    rows={2}
+                    style={{
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "4px",
+                      resize: "vertical",
+                      fontSize: "12px"
+                    }}
+                  />
+                  <button
+                    onClick={() => {/* TODO: 添加日志条目 */}}
+                    style={{
+                      marginTop: "6px",
+                      padding: "4px 8px",
+                      backgroundColor: "#10b981",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "12px"
+                    }}
+                  >
+                    添加
+                  </button>
+                </div>
+
+                <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "8px" }}>
                   {new Date().toLocaleDateString('zh-CN')}
-                </h4>
-                <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                </div>
+
+                <div style={{ flex: 1, overflowY: "auto" }}>
                   {[] /* diaryEntries */.map((entry: any) => (
                     <div key={entry.id} style={{
                       backgroundColor: "white",
-                      padding: "12px",
-                      marginBottom: "8px",
-                      borderRadius: "6px",
-                      border: "1px solid #e5e7eb"
+                      padding: "8px",
+                      marginBottom: "6px",
+                      borderRadius: "4px",
+                      border: "1px solid #e5e7eb",
+                      fontSize: "12px"
                     }}>
-                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                      <div style={{ color: "#9ca3af", marginBottom: "2px" }}>
                         {new Date(entry.created_at).toLocaleTimeString('zh-CN')}
                       </div>
                       <div>{entry.content}</div>
@@ -527,127 +580,99 @@ export default function App() {
 
             {/* 中间主要区域 */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              {/* 中上区域：课程 + 任务 */}
+              {/* 上部区域：任务进度 (25% 高度) */}
               <div style={{
+                height: "25%",
                 padding: "20px",
                 borderBottom: "1px solid #e5e7eb",
-                backgroundColor: "#fff"
+                backgroundColor: "#fff",
+                overflowY: "auto"
               }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                  {/* 左侧：课程列表 */}
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                      <h3 style={{ margin: 0, color: "#1f2937" }}>📚 课程</h3>
-                      <button
-                        onClick={() => setEditingCourse({} as Course)}
-                        style={{
-                          padding: "6px 12px",
-                          backgroundColor: "#3b82f6",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer"
-                        }}
-                      >
-                        + 添加课程
-                      </button>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <h3 style={{ margin: 0, color: "#1f2937" }}>✅ 任务进度</h3>
+                  <button
+                    onClick={() => setEditingTask({} as Task)}
+                    style={{
+                      padding: "6px 12px",
+                      backgroundColor: "#10b981",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    + 添加任务
+                  </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+                  {tasks.map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => setEditingTask(task)}
+                      style={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        padding: "16px",
+                        cursor: "pointer",
+                        transition: "box-shadow 0.2s"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)"}
+                      onMouseLeave={(e) => e.currentTarget.style.boxShadow = "none"}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                        <span style={{ fontWeight: "600", color: task.color, fontSize: "16px" }}>{task.name}</span>
+                        <span style={{ fontSize: "14px", color: "#6b7280", fontWeight: "500" }}>
+                          {task.progress}/{task.total}
+                        </span>
+                      </div>
+                      <div style={{
+                        width: "100%",
+                        height: "8px",
+                        backgroundColor: "#e5e7eb",
+                        borderRadius: "4px",
+                        overflow: "hidden",
+                        marginBottom: "8px"
+                      }}>
+                        <div style={{
+                          width: `${(task.progress / task.total) * 100}%`,
+                          height: "100%",
+                          backgroundColor: task.color,
+                          transition: "width 0.3s ease"
+                        }} />
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#9ca3af" }}>
+                        {Math.round((task.progress / task.total) * 100)}% 完成
+                      </div>
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                      {courses.map(course => (
-                        <div
-                          key={course.id}
-                          onClick={() => setEditingCourse(course)}
-                          style={{
-                            backgroundColor: course.color,
-                            color: "white",
-                            padding: "8px 12px",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            fontSize: "14px"
-                          }}
-                        >
-                          {course.name}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 右侧：任务列表 */}
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                      <h3 style={{ margin: 0, color: "#1f2937" }}>✅ 任务</h3>
-                      <button
-                        onClick={() => setEditingTask({} as Task)}
-                        style={{
-                          padding: "6px 12px",
-                          backgroundColor: "#10b981",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer"
-                        }}
-                      >
-                        + 添加任务
-                      </button>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {tasks.map(task => (
-                        <div
-                          key={task.id}
-                          onClick={() => setEditingTask(task)}
-                          style={{
-                            backgroundColor: "#fff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "6px",
-                            padding: "12px",
-                            cursor: "pointer",
-                            marginBottom: "8px"
-                          }}
-                        >
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                            <span style={{ fontWeight: "500", color: task.color }}>{task.name}</span>
-                            <span style={{ fontSize: "12px", color: "#6b7280" }}>
-                              {task.progress}/{task.total}
-                            </span>
-                          </div>
-                          <div style={{
-                            width: "100%",
-                            height: "6px",
-                            backgroundColor: "#e5e7eb",
-                            borderRadius: "3px",
-                            overflow: "hidden"
-                          }}>
-                            <div style={{
-                              width: `${(task.progress / task.total) * 100}%`,
-                              height: "100%",
-                              backgroundColor: task.color
-                            }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              {/* 核心时间表 */}
-              <div style={{ flex: 1, padding: "20px", overflow: "auto" }}>
-                <h3 style={{ marginTop: 0, marginBottom: "20px", color: "#1f2937" }}>📅 时间表</h3>
+              {/* 下部区域：时间表网格 (75% 高度) */}
+              <div style={{ height: "75%", padding: "20px", overflow: "auto" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                  <h3 style={{ margin: 0, color: "#1f2937" }}>📅 时间表</h3>
+                  <div style={{ fontSize: "14px", color: "#6b7280" }}>
+                    {new Date().toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                </div>
                 <div style={{
                   display: "grid",
                   gridTemplateColumns: "60px repeat(5, 1fr)",
                   gap: "1px",
                   backgroundColor: "#e5e7eb",
                   borderRadius: "8px",
-                  overflow: "hidden"
+                  overflow: "hidden",
+                  height: "calc(100% - 60px)"
                 }}>
                   {/* 时间列标题 */}
-                  <div style={{ backgroundColor: "#f9fafb", padding: "8px", fontWeight: "600", color: "#374151" }}>
+                  <div style={{ backgroundColor: "#f9fafb", padding: "12px 8px", fontWeight: "600", color: "#374151", fontSize: "14px" }}>
                     时间
                   </div>
                   {/* 星期列标题 */}
                   {['周一', '周二', '周三', '周四', '周五'].map(day => (
-                    <div key={day} style={{ backgroundColor: "#f9fafb", padding: "8px", fontWeight: "600", color: "#374151", textAlign: "center" }}>
+                    <div key={day} style={{ backgroundColor: "#f9fafb", padding: "12px 8px", fontWeight: "600", color: "#374151", textAlign: "center", fontSize: "14px" }}>
                       {day}
                     </div>
                   ))}
@@ -659,10 +684,12 @@ export default function App() {
                       <div key={hour} style={{ display: "contents" }}>
                         <div style={{
                           backgroundColor: "#f9fafb",
-                          padding: "12px 8px",
-                          fontSize: "12px",
+                          padding: "16px 8px",
+                          fontSize: "13px",
                           color: "#6b7280",
-                          borderTop: "1px solid #e5e7eb"
+                          borderTop: "1px solid #e5e7eb",
+                          display: "flex",
+                          alignItems: "center"
                         }}>
                           {hour}:00
                         </div>
@@ -675,7 +702,8 @@ export default function App() {
                               minHeight: "60px",
                               padding: "4px",
                               borderTop: "1px solid #e5e7eb",
-                              cursor: "pointer"
+                              cursor: "pointer",
+                              position: "relative"
                             }}
                             onClick={() => {/* TODO: 处理时间格子点击 */}}
                           >
@@ -689,29 +717,35 @@ export default function App() {
               </div>
             </div>
 
-            {/* 右侧 Edit Zone */}
+            {/* 右侧编辑面板 */}
             <div style={{
-              width: "350px",
+              width: "20%",
               backgroundColor: "#f9fafb",
               borderLeft: "1px solid #e5e7eb",
               padding: "20px",
               overflowY: "auto"
             }}>
-              <h3 style={{ marginTop: 0, color: "#1f2937" }}>⚙️ 编辑面板</h3>
+              <h3 style={{ marginTop: 0, color: "#1f2937", fontSize: "18px" }}>⚙️ Edit Zone</h3>
+
+              {!selectedTaskUnit && !editingCourse && !editingTask && (
+                <div style={{ color: "#9ca3af", fontSize: "14px", textAlign: "center", marginTop: "40px" }}>
+                  点击左侧的项目进行编辑
+                </div>
+              )}
 
               {selectedTaskUnit && (
                 <div style={{ marginBottom: "20px" }}>
-                  <h4 style={{ color: "#374151", marginBottom: "12px" }}>任务单元详情</h4>
+                  <h4 style={{ color: "#374151", marginBottom: "12px", fontSize: "16px" }}>任务单元详情</h4>
                   <div style={{ backgroundColor: "white", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
                     <div style={{ marginBottom: "12px" }}>
-                      <strong>任务：</strong>
+                      <strong style={{ color: "#374151" }}>任务：</strong>
                       {tasks.find(t => t.id === selectedTaskUnit.task_id)?.name}
                     </div>
                     <div style={{ marginBottom: "12px" }}>
-                      <strong>计划进度：</strong>{selectedTaskUnit.planned_amount}
+                      <strong style={{ color: "#374151" }}>计划进度：</strong>{selectedTaskUnit.planned_amount}
                     </div>
                     <div style={{ marginBottom: "12px" }}>
-                      <strong>完成进度：</strong>
+                      <strong style={{ color: "#374151" }}>实际进度：</strong>
                       <input
                         type="number"
                         value={selectedTaskUnit.completed_amount}
@@ -727,10 +761,11 @@ export default function App() {
                         color: "white",
                         border: "none",
                         borderRadius: "4px",
-                        cursor: "pointer"
+                        cursor: "pointer",
+                        fontSize: "14px"
                       }}
                     >
-                      打卡完成
+                      ✅ 打卡完成
                     </button>
                   </div>
                 </div>
@@ -738,12 +773,12 @@ export default function App() {
 
               {editingCourse && (
                 <div style={{ marginBottom: "20px" }}>
-                  <h4 style={{ color: "#374151", marginBottom: "12px" }}>
+                  <h4 style={{ color: "#374151", marginBottom: "12px", fontSize: "16px" }}>
                     {editingCourse.id ? '编辑课程' : '添加课程'}
                   </h4>
                   <div style={{ backgroundColor: "white", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
                     <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>课程名称</label>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>课程名称</label>
                       <input
                         type="text"
                         value={editingCourse.name || ""}
@@ -752,7 +787,7 @@ export default function App() {
                       />
                     </div>
                     <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>颜色</label>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>颜色</label>
                       <input
                         type="color"
                         value={editingCourse.color || "#3B82F6"}
@@ -796,12 +831,12 @@ export default function App() {
 
               {editingTask && (
                 <div>
-                  <h4 style={{ color: "#374151", marginBottom: "12px" }}>
+                  <h4 style={{ color: "#374151", marginBottom: "12px", fontSize: "16px" }}>
                     {editingTask.id ? '编辑任务' : '添加任务'}
                   </h4>
                   <div style={{ backgroundColor: "white", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
                     <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>任务名称</label>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>任务名称</label>
                       <input
                         type="text"
                         value={editingTask.name || ""}
@@ -810,7 +845,7 @@ export default function App() {
                       />
                     </div>
                     <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>总进度</label>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>总进度</label>
                       <input
                         type="number"
                         value={editingTask.total || 100}
@@ -819,7 +854,7 @@ export default function App() {
                       />
                     </div>
                     <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>颜色</label>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>颜色</label>
                       <input
                         type="color"
                         value={editingTask.color || "#10B981"}
