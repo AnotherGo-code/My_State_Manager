@@ -413,40 +413,37 @@ export default function App() {
           </div>
         </div>
       ) : (
-        <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ height: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#0f0f0f", color: "#fff" }}>
           {/* 顶部 Header */}
           <header style={{
-            height: "80px",
-            backgroundColor: "#fff",
-            borderBottom: "1px solid #e5e7eb",
+            height: "60px",
+            backgroundColor: "#1a1a1a",
+            borderBottom: "1px solid #2a2a2a",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             padding: "0 24px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+            boxShadow: "none"
           }}>
             {/* 左侧：学校名称、用户头像、用户名 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <h1 style={{ margin: 0, color: "#1f2937", fontSize: "24px", fontWeight: "600", cursor: "pointer" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <h1 style={{ margin: 0, color: "#fff", fontSize: "18px", fontWeight: "500", cursor: "pointer" }}>
                 时间管理器
               </h1>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px" }}>
                 <img
-                  src="https://via.placeholder.com/32"
+                  src="https://via.placeholder.com/28"
                   alt="头像"
-                  style={{ width: "32px", height: "32px", borderRadius: "50%" }}
+                  style={{ width: "28px", height: "28px", borderRadius: "50%" }}
                 />
-                <span style={{ color: "#6b7280", cursor: "pointer" }}>{user.email}</span>
+                <span style={{ color: "#b0b0b0", cursor: "pointer" }}>{user.email}</span>
               </div>
             </div>
 
             {/* 中间：周数和日期范围 */}
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "24px", fontWeight: "600", color: "#1f2937" }}>Week 1</div>
-              <div style={{ fontSize: "14px", color: "#6b7280" }}>2026.03.23 ~ 2026.03.29</div>
-              <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px", fontStyle: "italic" }}>
-                "今日事，今日毕"
-              </div>
+              <div style={{ fontSize: "18px", fontWeight: "500", color: "#fff" }}>Week 1</div>
+              <div style={{ fontSize: "12px", color: "#888" }}>2026.03.23 〜 2026.03.29</div>
             </div>
 
             {/* 右侧：Calendar按钮 */}
@@ -454,12 +451,22 @@ export default function App() {
               <button
                 onClick={() => setShowCalendar(!showCalendar)}
                 style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#f3f4f6",
-                  border: "1px solid #d1d5db",
+                  padding: "6px 14px",
+                  backgroundColor: "#2a2a2a",
+                  border: "1px solid #3a3a3a",
                   borderRadius: "6px",
                   cursor: "pointer",
-                  fontSize: "14px"
+                  fontSize: "13px",
+                  color: "#b0b0b0",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#333";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#2a2a2a";
+                  e.currentTarget.style.color = "#b0b0b0";
                 }}
               >
                 📅 Calendar
@@ -471,32 +478,36 @@ export default function App() {
           <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
             {/* 左侧边栏：课程 + Diary */}
             <div style={{
-              width: "20%",
-              backgroundColor: "#f9fafb",
-              borderRight: "1px solid #e5e7eb",
+              width: "18%",
+              backgroundColor: "#1a1a1a",
+              borderRight: "1px solid #2a2a2a",
               display: "flex",
-              flexDirection: "column"
+              flexDirection: "column",
+              overflow: "hidden"
             }}>
               {/* 课程区域 */}
-              <div style={{ padding: "20px", borderBottom: "1px solid #e5e7eb" }}>
+              <div style={{ padding: "16px", borderBottom: "1px solid #2a2a2a" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                  <h3 style={{ margin: 0, color: "#1f2937", fontSize: "18px" }}>📚 Courses</h3>
+                  <h3 style={{ margin: 0, color: "#fff", fontSize: "14px", fontWeight: "500" }}>📚 Courses</h3>
                   <button
                     onClick={() => setEditingCourse({} as Course)}
                     style={{
-                      padding: "4px 8px",
-                      backgroundColor: "#3b82f6",
+                      padding: "4px 10px",
+                      backgroundColor: "#2a6dd3",
                       color: "white",
                       border: "none",
                       borderRadius: "4px",
                       cursor: "pointer",
-                      fontSize: "12px"
+                      fontSize: "11px",
+                      transition: "all 0.2s"
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#3275dd"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2a6dd3"}
                   >
                     +
                   </button>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   {courses.map(course => (
                     <div
                       key={course.id}
@@ -506,29 +517,32 @@ export default function App() {
                         alignItems: "center",
                         gap: "8px",
                         padding: "8px",
-                        borderRadius: "6px",
+                        borderRadius: "4px",
                         cursor: "pointer",
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb"
+                        backgroundColor: "#2a2a2a",
+                        border: "none",
+                        transition: "all 0.2s"
                       }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#333"}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2a2a2a"}
                     >
                       <div
                         style={{
-                          width: "12px",
-                          height: "12px",
+                          width: "8px",
+                          height: "8px",
                           borderRadius: "50%",
                           backgroundColor: course.color
                         }}
                       />
-                      <span style={{ fontSize: "14px", color: "#374151" }}>{course.name}</span>
+                      <span style={{ fontSize: "12px", color: "#e5e5e5" }}>{course.name}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Diary区域 */}
-              <div style={{ flex: 1, padding: "20px", overflow: "hidden", display: "flex", flexDirection: "column", position: 'relative' }}>
-                <h3 style={{ margin: 0, marginBottom: "12px", color: "#1f2937", fontSize: "18px" }}>📝 Diary</h3>
+              <div style={{ flex: 1, padding: "16px", overflow: "hidden", display: "flex", flexDirection: "column", position: 'relative' }}>
+                <h3 style={{ margin: 0, marginBottom: "12px", color: "#fff", fontSize: "14px", fontWeight: "500" }}>📝 Diary</h3>
                 <div style={{ marginBottom: "12px" }}>
                   <textarea
                     placeholder="添加日志条目..."
@@ -538,10 +552,12 @@ export default function App() {
                     style={{
                       width: "100%",
                       padding: "6px",
-                      border: "1px solid #d1d5db",
+                      border: "1px solid #3a3a3a",
                       borderRadius: "4px",
                       resize: "vertical",
-                      fontSize: "12px"
+                      fontSize: "11px",
+                      backgroundColor: "#2a2a2a",
+                      color: "#e5e5e5"
                     }}
                   />
                   <button
@@ -549,85 +565,98 @@ export default function App() {
                     style={{
                       marginTop: "6px",
                       padding: "4px 8px",
-                      backgroundColor: "#10b981",
+                      backgroundColor: "#28a745",
                       color: "white",
                       border: "none",
                       borderRadius: "4px",
                       cursor: "pointer",
-                      fontSize: "12px"
+                      fontSize: "11px",
+                      transition: "all 0.2s"
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#32b14a"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#28a745"}
                   >
                     添加
                   </button>
                 </div>
 
-                <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "8px" }}>
+                <div style={{ fontSize: "11px", color: "#666", marginBottom: "8px" }}>
                   {new Date().toLocaleDateString('zh-CN')}
                 </div>
 
                 <div style={{ flex: 1, overflowY: "auto", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ color: '#bfe9f6', fontSize: 56, fontWeight: 700, opacity: 0.6, textAlign: 'center', lineHeight: 1.1 }}>
-                    Dairy / Log Area
+                  <div style={{ color: '#4a5a6a', fontSize: 48, fontWeight: 300, opacity: 0.4, textAlign: 'center', lineHeight: 1.1 }}>
+                    Dairy /<br/>Log Area
                   </div>
                 </div>
               </div>
             </div>
 
             {/* 中间主要区域 */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              {/* 上部区域：任务进度 (25% 高度) */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", backgroundColor: "#0f0f0f" }}>
+              {/* 上部区域：任务进度 (20% 高度) */}
               <div style={{
-                height: "25%",
-                padding: "20px",
-                borderBottom: "1px solid #e5e7eb",
-                backgroundColor: "#fff",
+                height: "20%",
+                padding: "16px",
+                borderBottom: "1px solid #2a2a2a",
+                backgroundColor: "#0f0f0f",
                 overflowY: "auto"
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h3 style={{ margin: 0, color: "#1f2937" }}>✅ 任务进度</h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <h3 style={{ margin: 0, color: "#fff", fontSize: "14px", fontWeight: "500" }}>✅ 任务进度</h3>
                   <button
                     onClick={() => setEditingTask({} as Task)}
                     style={{
-                      padding: "6px 12px",
-                      backgroundColor: "#10b981",
+                      padding: "4px 10px",
+                      backgroundColor: "#28a745",
                       color: "white",
                       border: "none",
                       borderRadius: "4px",
-                      cursor: "pointer"
+                      cursor: "pointer",
+                      fontSize: "11px",
+                      transition: "all 0.2s"
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#32b14a"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#28a745"}
                   >
                     + 添加任务
                   </button>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
                   {tasks.map(task => (
                     <div
                       key={task.id}
                       onClick={() => setEditingTask(task)}
                       style={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        padding: "16px",
+                        backgroundColor: "#1a1a1a",
+                        border: "1px solid #2a2a2a",
+                        borderRadius: "6px",
+                        padding: "12px",
                         cursor: "pointer",
-                        transition: "box-shadow 0.2s"
+                        transition: "all 0.2s"
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)"}
-                      onMouseLeave={(e) => e.currentTarget.style.boxShadow = "none"}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#222";
+                        e.currentTarget.style.borderColor = "#3a3a3a";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#1a1a1a";
+                        e.currentTarget.style.borderColor = "#2a2a2a";
+                      }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                        <span style={{ fontWeight: "600", color: task.color, fontSize: "16px" }}>{task.name}</span>
-                        <span style={{ fontSize: "14px", color: "#6b7280", fontWeight: "500" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <span style={{ fontWeight: "500", color: task.color, fontSize: "13px" }}>{task.name}</span>
+                        <span style={{ fontSize: "11px", color: "#888", fontWeight: "400" }}>
                           {task.progress}/{task.total}
                         </span>
                       </div>
                       <div style={{
                         width: "100%",
-                        height: "8px",
-                        backgroundColor: "#e5e7eb",
-                        borderRadius: "4px",
+                        height: "4px",
+                        backgroundColor: "#2a2a2a",
+                        borderRadius: "2px",
                         overflow: "hidden",
-                        marginBottom: "8px"
+                        marginBottom: "6px"
                       }}>
                         <div style={{
                           width: `${(task.progress / task.total) * 100}%`,
@@ -636,7 +665,7 @@ export default function App() {
                           transition: "width 0.3s ease"
                         }} />
                       </div>
-                      <div style={{ fontSize: "12px", color: "#9ca3af" }}>
+                      <div style={{ fontSize: "10px", color: "#666" }}>
                         {Math.round((task.progress / task.total) * 100)}% 完成
                       </div>
                     </div>
@@ -644,38 +673,40 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 下部区域：时间表网格 (75% 高度) */}
-              <div style={{ height: "75%", padding: "20px", overflow: "auto" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                  <h3 style={{ margin: 0, color: "#1f2937" }}>📅 时间表</h3>
-                  <div style={{ fontSize: "14px", color: "#6b7280" }}>
+              {/* 下部区域：时间表网格 (80% 高度) */}
+              <div style={{ height: "80%", padding: "16px", overflow: "auto", display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <h3 style={{ margin: 0, color: "#fff", fontSize: "14px", fontWeight: "500" }}>📅 时间表</h3>
+                  <div style={{ fontSize: "11px", color: "#666" }}>
                     {new Date().toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                   </div>
                 </div>
                 <div style={{
-                  padding: "6px",
-                  border: "3px solid #111",
+                  padding: "4px",
+                  border: "2px solid #333",
                   borderRadius: "8px",
                   backgroundColor: "transparent",
-                  height: "calc(100% - 60px)",
-                  overflow: "hidden"
+                  height: "calc(100% - 40px)",
+                  overflow: "hidden",
+                  flex: 1
                 }}>
                   <div style={{
                     display: "grid",
-                    gridTemplateColumns: "60px repeat(5, 1fr)",
-                    gap: "4px",
-                    backgroundColor: "#efe7ff",
+                    gridTemplateColumns: "50px repeat(5, 1fr)",
+                    gap: "2px",
+                    backgroundColor: "#1a1a2e",
                     borderRadius: "6px",
                     height: "100%",
-                    overflow: "auto"
+                    overflow: "auto",
+                    padding: "2px"
                   }}>
                   {/* 时间列标题 */}
-                  <div style={{ backgroundColor: "#f9fafb", padding: "12px 8px", fontWeight: "600", color: "#374151", fontSize: "14px" }}>
+                  <div style={{ backgroundColor: "#252a3a", padding: "8px 4px", fontWeight: "500", color: "#888", fontSize: "11px", display: "flex", alignItems: "center" }}>
                     时间
                   </div>
                   {/* 星期列标题 */}
-                  {['周一', '周二', '周三', '周四', '周五'].map(day => (
-                    <div key={day} style={{ backgroundColor: "#f9fafb", padding: "12px 8px", fontWeight: "600", color: "#374151", textAlign: "center", fontSize: "14px" }}>
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map(day => (
+                    <div key={day} style={{ backgroundColor: "#252a3a", padding: "8px 4px", fontWeight: "500", color: "#888", textAlign: "center", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {day}
                     </div>
                   ))}
@@ -686,13 +717,13 @@ export default function App() {
                     return (
                       <div key={hour} style={{ display: "contents" }}>
                         <div style={{
-                          backgroundColor: "#f9fafb",
-                          padding: "16px 8px",
-                          fontSize: "13px",
-                          color: "#6b7280",
-                          borderTop: "1px solid #e5e7eb",
+                          backgroundColor: "#252a3a",
+                          padding: "8px 4px",
+                          fontSize: "10px",
+                          color: "#666",
                           display: "flex",
-                          alignItems: "center"
+                          alignItems: "center",
+                          justifyContent: "center"
                         }}>
                           {hour}:00
                         </div>
@@ -701,12 +732,13 @@ export default function App() {
                           <div
                             key={`${hour}-${dayIndex}`}
                             style={{
-                              backgroundColor: "white",
-                              minHeight: "60px",
-                              padding: "6px",
+                              backgroundColor: "#1f2435",
+                              minHeight: "50px",
+                              padding: "4px",
                               cursor: "pointer",
                               position: "relative",
-                              overflow: 'visible'
+                              overflow: 'visible',
+                              borderBottom: "1px solid #2a3040"
                             }}
                             onClick={() => {/* TODO: 处理时间格子点击 */}}
                           >
@@ -714,22 +746,22 @@ export default function App() {
                             {exampleEvents.filter(ev => ev.dayIndex === dayIndex && ev.startHour === hour).map(ev => (
                               <div key={ev.id} style={{
                                 position: 'absolute',
-                                top: 6,
-                                left: 6,
-                                right: 6,
-                                height: 32,
+                                top: 4,
+                                left: 4,
+                                right: 4,
+                                height: 28,
                                 backgroundColor: ev.color,
                                 color: 'white',
-                                borderRadius: 6,
-                                padding: '4px 8px',
-                                fontSize: 12,
-                                boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                                borderRadius: 4,
+                                padding: '3px 6px',
+                                fontSize: 10,
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'center'
                               }}>
-                                <div style={{ fontWeight: 700, lineHeight: 1 }}>{ev.title}</div>
-                                {ev.sub && <div style={{ fontSize: 11, opacity: 0.95 }}>{ev.sub}</div>}
+                                <div style={{ fontWeight: 600, lineHeight: 1, fontSize: 10 }}>{ev.title}</div>
+                                {ev.sub && <div style={{ fontSize: 8, opacity: 0.9 }}>{ev.sub}</div>}
                               </div>
                             ))}
                           </div>
@@ -744,51 +776,57 @@ export default function App() {
 
             {/* 右侧编辑面板 */}
             <div style={{
-              width: "20%",
-              backgroundColor: "#f9fafb",
-              borderLeft: "1px solid #e5e7eb",
-              padding: "20px",
-              overflowY: "auto"
+              width: "18%",
+              backgroundColor: "#1a1a1a",
+              borderLeft: "1px solid #2a2a2a",
+              padding: "16px",
+              overflowY: "auto",
+              display: 'flex',
+              flexDirection: 'column'
             }}>
-              <h3 style={{ marginTop: 0, color: "#1f2937", fontSize: "18px" }}>⚙️ Edit Zone</h3>
+              <h3 style={{ marginTop: 0, color: "#2a6dd3", fontSize: "32px", textAlign: 'center', lineHeight: 1.0, fontWeight: 400 }}>Edit<br/>Zone</h3>
 
               {!selectedTaskUnit && !editingCourse && !editingTask && (
-                <div style={{ color: "#9ca3af", fontSize: "14px", textAlign: "center", marginTop: "40px" }}>
+                <div style={{ color: "#666", fontSize: "12px", textAlign: "center", marginTop: "20px" }}>
                   点击左侧的项目进行编辑
                 </div>
               )}
 
               {selectedTaskUnit && (
-                <div style={{ marginBottom: "20px" }}>
-                  <h4 style={{ color: "#374151", marginBottom: "12px", fontSize: "16px" }}>任务单元详情</h4>
-                  <div style={{ backgroundColor: "white", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                    <div style={{ marginBottom: "12px" }}>
-                      <strong style={{ color: "#374151" }}>任务：</strong>
-                      {tasks.find(t => t.id === selectedTaskUnit.task_id)?.name}
+                <div style={{ marginBottom: "16px" }}>
+                  <h4 style={{ color: "#e5e5e5", marginBottom: "12px", fontSize: "13px", fontWeight: "500" }}>任务单元详情</h4>
+                  <div style={{ backgroundColor: "#2a2a2a", padding: "12px", borderRadius: "6px", border: "1px solid #3a3a3a" }}>
+                    <div style={{ marginBottom: "10px", fontSize: "12px" }}>
+                      <strong style={{ color: "#b0b0b0" }}>任务：</strong>
+                      <span style={{ color: "#e5e5e5", marginLeft: "4px" }}>{tasks.find(t => t.id === selectedTaskUnit.task_id)?.name}</span>
                     </div>
-                    <div style={{ marginBottom: "12px" }}>
-                      <strong style={{ color: "#374151" }}>计划进度：</strong>{selectedTaskUnit.planned_amount}
+                    <div style={{ marginBottom: "10px", fontSize: "12px" }}>
+                      <strong style={{ color: "#b0b0b0" }}>计划进度：</strong>
+                      <span style={{ color: "#e5e5e5", marginLeft: "4px" }}>{selectedTaskUnit.planned_amount}</span>
                     </div>
-                    <div style={{ marginBottom: "12px" }}>
-                      <strong style={{ color: "#374151" }}>实际进度：</strong>
+                    <div style={{ marginBottom: "10px", fontSize: "12px" }}>
+                      <strong style={{ color: "#b0b0b0" }}>实际进度：</strong>
                       <input
                         type="number"
                         value={selectedTaskUnit.completed_amount}
                         onChange={(e) => setSelectedTaskUnit({...selectedTaskUnit, completed_amount: parseInt(e.target.value) || 0})}
-                        style={{ width: "60px", padding: "4px", border: "1px solid #d1d5db", borderRadius: "4px" }}
+                        style={{ width: "50px", padding: "4px", border: "1px solid #3a3a3a", borderRadius: "4px", backgroundColor: "#333", color: "#e5e5e5", marginLeft: "4px" }}
                       />
                     </div>
                     <button
                       style={{
                         width: "100%",
-                        padding: "8px",
-                        backgroundColor: "#3b82f6",
+                        padding: "6px",
+                        backgroundColor: "#2a6dd3",
                         color: "white",
                         border: "none",
                         borderRadius: "4px",
                         cursor: "pointer",
-                        fontSize: "14px"
+                        fontSize: "12px",
+                        transition: "all 0.2s"
                       }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#3275dd"}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2a6dd3"}
                     >
                       ✅ 打卡完成
                     </button>
@@ -797,41 +835,45 @@ export default function App() {
               )}
 
               {editingCourse && (
-                <div style={{ marginBottom: "20px" }}>
-                  <h4 style={{ color: "#374151", marginBottom: "12px", fontSize: "16px" }}>
+                <div style={{ marginBottom: "16px" }}>
+                  <h4 style={{ color: "#e5e5e5", marginBottom: "12px", fontSize: "13px", fontWeight: "500" }}>
                     {editingCourse.id ? '编辑课程' : '添加课程'}
                   </h4>
-                  <div style={{ backgroundColor: "white", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                    <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>课程名称</label>
+                  <div style={{ backgroundColor: "#2a2a2a", padding: "12px", borderRadius: "6px", border: "1px solid #3a3a3a" }}>
+                    <div style={{ marginBottom: "10px" }}>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "400", color: "#b0b0b0", fontSize: "11px" }}>课程名称</label>
                       <input
                         type="text"
                         value={editingCourse.name || ""}
                         onChange={(e) => setEditingCourse({...editingCourse, name: e.target.value})}
-                        style={{ width: "100%", padding: "8px", border: "1px solid #d1d5db", borderRadius: "4px" }}
+                        style={{ width: "100%", padding: "6px", border: "1px solid #3a3a3a", borderRadius: "4px", backgroundColor: "#333", color: "#e5e5e5", fontSize: "12px" }}
                       />
                     </div>
-                    <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>颜色</label>
+                    <div style={{ marginBottom: "10px" }}>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "400", color: "#b0b0b0", fontSize: "11px" }}>颜色</label>
                       <input
                         type="color"
                         value={editingCourse.color || "#3B82F6"}
                         onChange={(e) => setEditingCourse({...editingCourse, color: e.target.value})}
-                        style={{ width: "100%", height: "40px", border: "1px solid #d1d5db", borderRadius: "4px" }}
+                        style={{ width: "100%", height: "30px", border: "1px solid #3a3a3a", borderRadius: "4px" }}
                       />
                     </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={{ display: "flex", gap: "6px" }}>
                       <button
                         onClick={() => {/* TODO: 保存课程 */}}
                         style={{
                           flex: 1,
-                          padding: "8px",
-                          backgroundColor: "#10b981",
+                          padding: "6px",
+                          backgroundColor: "#28a745",
                           color: "white",
                           border: "none",
                           borderRadius: "4px",
-                          cursor: "pointer"
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          transition: "all 0.2s"
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#32b14a"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#28a745"}
                       >
                         保存
                       </button>
@@ -839,13 +881,17 @@ export default function App() {
                         onClick={() => setEditingCourse(null)}
                         style={{
                           flex: 1,
-                          padding: "8px",
-                          backgroundColor: "#6b7280",
+                          padding: "6px",
+                          backgroundColor: "#555",
                           color: "white",
                           border: "none",
                           borderRadius: "4px",
-                          cursor: "pointer"
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          transition: "all 0.2s"
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#666"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#555"}
                       >
                         取消
                       </button>
@@ -856,49 +902,53 @@ export default function App() {
 
               {editingTask && (
                 <div>
-                  <h4 style={{ color: "#374151", marginBottom: "12px", fontSize: "16px" }}>
+                  <h4 style={{ color: "#e5e5e5", marginBottom: "12px", fontSize: "13px", fontWeight: "500" }}>
                     {editingTask.id ? '编辑任务' : '添加任务'}
                   </h4>
-                  <div style={{ backgroundColor: "white", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                    <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>任务名称</label>
+                  <div style={{ backgroundColor: "#2a2a2a", padding: "12px", borderRadius: "6px", border: "1px solid #3a3a3a" }}>
+                    <div style={{ marginBottom: "10px" }}>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "400", color: "#b0b0b0", fontSize: "11px" }}>任务名称</label>
                       <input
                         type="text"
                         value={editingTask.name || ""}
                         onChange={(e) => setEditingTask({...editingTask, name: e.target.value})}
-                        style={{ width: "100%", padding: "8px", border: "1px solid #d1d5db", borderRadius: "4px" }}
+                        style={{ width: "100%", padding: "6px", border: "1px solid #3a3a3a", borderRadius: "4px", backgroundColor: "#333", color: "#e5e5e5", fontSize: "12px" }}
                       />
                     </div>
-                    <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>总进度</label>
+                    <div style={{ marginBottom: "10px" }}>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "400", color: "#b0b0b0", fontSize: "11px" }}>总进度</label>
                       <input
                         type="number"
                         value={editingTask.total || 100}
                         onChange={(e) => setEditingTask({...editingTask, total: parseInt(e.target.value) || 100})}
-                        style={{ width: "100%", padding: "8px", border: "1px solid #d1d5db", borderRadius: "4px" }}
+                        style={{ width: "100%", padding: "6px", border: "1px solid #3a3a3a", borderRadius: "4px", backgroundColor: "#333", color: "#e5e5e5", fontSize: "12px" }}
                       />
                     </div>
-                    <div style={{ marginBottom: "12px" }}>
-                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "500", color: "#374151" }}>颜色</label>
+                    <div style={{ marginBottom: "10px" }}>
+                      <label style={{ display: "block", marginBottom: "4px", fontWeight: "400", color: "#b0b0b0", fontSize: "11px" }}>颜色</label>
                       <input
                         type="color"
                         value={editingTask.color || "#10B981"}
                         onChange={(e) => setEditingTask({...editingTask, color: e.target.value})}
-                        style={{ width: "100%", height: "40px", border: "1px solid #d1d5db", borderRadius: "4px" }}
+                        style={{ width: "100%", height: "30px", border: "1px solid #3a3a3a", borderRadius: "4px" }}
                       />
                     </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={{ display: "flex", gap: "6px" }}>
                       <button
                         onClick={() => {/* TODO: 保存任务 */}}
                         style={{
                           flex: 1,
-                          padding: "8px",
-                          backgroundColor: "#10b981",
+                          padding: "6px",
+                          backgroundColor: "#28a745",
                           color: "white",
                           border: "none",
                           borderRadius: "4px",
-                          cursor: "pointer"
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          transition: "all 0.2s"
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#32b14a"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#28a745"}
                       >
                         保存
                       </button>
@@ -906,13 +956,17 @@ export default function App() {
                         onClick={() => setEditingTask(null)}
                         style={{
                           flex: 1,
-                          padding: "8px",
-                          backgroundColor: "#6b7280",
+                          padding: "6px",
+                          backgroundColor: "#555",
                           color: "white",
                           border: "none",
                           borderRadius: "4px",
-                          cursor: "pointer"
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          transition: "all 0.2s"
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#666"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#555"}
                       >
                         取消
                       </button>
