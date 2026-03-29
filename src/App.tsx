@@ -304,8 +304,38 @@ export default function App() {
       fetchTaskUnits();
       fetchDiaries();
       fetchDiaryEntries();
+    } else {
+      // 未登录时使用示例数据
+      initializeSampleData();
     }
   }, [user]);
+
+  // 初始化示例数据
+  function initializeSampleData() {
+    // 示例任务
+    const sampleTasks: Task[] = [
+      {
+        id: 'task1',
+        user_id: 'demo',
+        name: 'Reading',
+        progress: 0,
+        total: 100,
+        color: '#fb923c',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 'task2',
+        user_id: 'demo',
+        name: 'Programming',
+        progress: 0,
+        total: 150,
+        color: '#fda4af',
+        created_at: new Date().toISOString()
+      }
+    ];
+    setTasks(sampleTasks);
+    setTaskUnits(exampleTaskUnits);
+  }
 
   // TODO: 暂时注释掉未使用的函数，避免编译错误
   /*
