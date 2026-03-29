@@ -75,7 +75,7 @@ export default function App() {
   // 数据状态
   const [courses, setCourses] = useState<Course[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  // const [taskUnits, setTaskUnits] = useState<TaskUnit[]>([]);
+  const [taskUnits, setTaskUnits] = useState<TaskUnit[]>([]);
   // const [diaries, setDiaries] = useState<Diary[]>([]);
   // const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
 
@@ -102,6 +102,50 @@ export default function App() {
     { id: 'e3', dayIndex: 2, startHour: 12, duration: 1, color: '#fb923c', title: 'Math', sub: '' },
   ];
 
+  // 示例任务单元数据（与前两个任务关联）
+  const exampleTaskUnits: TaskUnit[] = [
+    {
+      id: 'tu1',
+      task_id: 'task1',
+      day_of_week: 1,
+      start_time: '09:00',
+      end_time: '10:00',
+      planned_amount: 3,
+      completed_amount: 0,
+      status: 'pending'
+    },
+    {
+      id: 'tu2',
+      task_id: 'task1',
+      day_of_week: 3,
+      start_time: '14:00',
+      end_time: '15:00',
+      planned_amount: 2,
+      completed_amount: 0,
+      status: 'pending'
+    },
+    {
+      id: 'tu3',
+      task_id: 'task2',
+      day_of_week: 2,
+      start_time: '10:00',
+      end_time: '12:00',
+      planned_amount: 5,
+      completed_amount: 0,
+      status: 'pending'
+    },
+    {
+      id: 'tu4',
+      task_id: 'task2',
+      day_of_week: 4,
+      start_time: '15:00',
+      end_time: '16:00',
+      planned_amount: 2,
+      completed_amount: 0,
+      status: 'pending'
+    }
+  ];
+
   async function fetchCourses() {
     try {
       const { data, error } = await supabase.from("courses").select("*");
@@ -124,8 +168,8 @@ export default function App() {
 
   async function fetchTaskUnits() {
     try {
-      const { error } = await supabase.from("task_units").select("*");
-      if (error) console.error("Error fetching task units:", error);
+      // 暂时使用示例数据直到Supabase配置完毕
+      setTaskUnits(exampleTaskUnits);
     } catch (err) {
       console.error("Fetch task units failed:", err);
     }
@@ -623,53 +667,62 @@ export default function App() {
                   </button>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
-                  {tasks.map(task => (
-                    <div
-                      key={task.id}
-                      onClick={() => setEditingTask(task)}
-                      style={{
-                        backgroundColor: "#1a1a1a",
-                        border: "1px solid #2a2a2a",
-                        borderRadius: "6px",
-                        padding: "12px",
-                        cursor: "pointer",
-                        transition: "all 0.2s"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#222";
-                        e.currentTarget.style.borderColor = "#3a3a3a";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#1a1a1a";
-                        e.currentTarget.style.borderColor = "#2a2a2a";
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                        <span style={{ fontWeight: "500", color: task.color, fontSize: "13px" }}>{task.name}</span>
-                        <span style={{ fontSize: "11px", color: "#888", fontWeight: "400" }}>
-                          {task.progress}/{task.total}
-                        </span>
-                      </div>
-                      <div style={{
-                        width: "100%",
-                        height: "4px",
-                        backgroundColor: "#2a2a2a",
-                        borderRadius: "2px",
-                        overflow: "hidden",
-                        marginBottom: "6px"
-                      }}>
+                  {tasks.map(task => {
+                    const relatedUnits = taskUnits.filter(tu => tu.task_id === task.id);
+                    const completedUnits = relatedUnits.filter(tu => tu.status === 'done').length;
+                    return (
+                      <div
+                        key={task.id}
+                        onClick={() => setEditingTask(task)}
+                        style={{
+                          backgroundColor: "#1a1a1a",
+                          border: "1px solid #2a2a2a",
+                          borderRadius: "6px",
+                          padding: "12px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#222";
+                          e.currentTarget.style.borderColor = "#3a3a3a";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "#1a1a1a";
+                          e.currentTarget.style.borderColor = "#2a2a2a";
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                          <span style={{ fontWeight: "500", color: task.color, fontSize: "13px" }}>{task.name}</span>
+                          <span style={{ fontSize: "11px", color: "#888", fontWeight: "400" }}>
+                            {task.progress}/{task.total}
+                          </span>
+                        </div>
                         <div style={{
-                          width: `${(task.progress / task.total) * 100}%`,
-                          height: "100%",
-                          backgroundColor: task.color,
-                          transition: "width 0.3s ease"
-                        }} />
+                          width: "100%",
+                          height: "4px",
+                          backgroundColor: "#2a2a2a",
+                          borderRadius: "2px",
+                          overflow: "hidden",
+                          marginBottom: "6px"
+                        }}>
+                          <div style={{
+                            width: `${(task.progress / task.total) * 100}%`,
+                            height: "100%",
+                            backgroundColor: task.color,
+                            transition: "width 0.3s ease"
+                          }} />
+                        </div>
+                        <div style={{ fontSize: "10px", color: "#666", marginBottom: "6px" }}>
+                          {Math.round((task.progress / task.total) * 100)}% 完成
+                        </div>
+                        {relatedUnits.length > 0 && (
+                          <div style={{ fontSize: "10px", color: "#888", borderTop: "1px solid #2a2a2a", paddingTop: "6px" }}>
+                            📋 {completedUnits}/{relatedUnits.length} 任务单元完成
+                          </div>
+                        )}
                       </div>
-                      <div style={{ fontSize: "10px", color: "#666" }}>
-                        {Math.round((task.progress / task.total) * 100)}% 完成
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -764,6 +817,45 @@ export default function App() {
                                 {ev.sub && <div style={{ fontSize: 8, opacity: 0.9 }}>{ev.sub}</div>}
                               </div>
                             ))}
+
+                            {/* 渲染任务单元 */}
+                            {taskUnits.filter(tu => {
+                              const tuHour = parseInt(tu.start_time.split(':')[0]);
+                              return tu.day_of_week === dayIndex && tuHour === hour;
+                            }).map(tu => {
+                              const task = tasks.find(t => t.id === tu.task_id);
+                              return (
+                                <div 
+                                  key={tu.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedTaskUnit(tu);
+                                  }}
+                                  style={{
+                                    position: 'absolute',
+                                    top: 34,
+                                    left: 4,
+                                    right: 4,
+                                    height: 24,
+                                    backgroundColor: task?.color || '#2a6dd3',
+                                    color: 'white',
+                                    borderRadius: 3,
+                                    padding: '2px 4px',
+                                    fontSize: 8,
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 500,
+                                    opacity: tu.status === 'done' ? 0.6 : 1,
+                                    cursor: 'pointer',
+                                    textDecoration: tu.status === 'done' ? 'line-through' : 'none'
+                                  }}
+                                >
+                                  {task?.name} +{tu.planned_amount}
+                                </div>
+                              );
+                            })}
                           </div>
                         ))}
                       </div>
@@ -801,6 +893,10 @@ export default function App() {
                       <span style={{ color: "#e5e5e5", marginLeft: "4px" }}>{tasks.find(t => t.id === selectedTaskUnit.task_id)?.name}</span>
                     </div>
                     <div style={{ marginBottom: "10px", fontSize: "12px" }}>
+                      <strong style={{ color: "#b0b0b0" }}>时间：</strong>
+                      <span style={{ color: "#e5e5e5", marginLeft: "4px" }}>周{['一', '二', '三', '四', '五'][selectedTaskUnit.day_of_week]} {selectedTaskUnit.start_time}</span>
+                    </div>
+                    <div style={{ marginBottom: "10px", fontSize: "12px" }}>
                       <strong style={{ color: "#b0b0b0" }}>计划进度：</strong>
                       <span style={{ color: "#e5e5e5", marginLeft: "4px" }}>{selectedTaskUnit.planned_amount}</span>
                     </div>
@@ -813,22 +909,51 @@ export default function App() {
                         style={{ width: "50px", padding: "4px", border: "1px solid #3a3a3a", borderRadius: "4px", backgroundColor: "#333", color: "#e5e5e5", marginLeft: "4px" }}
                       />
                     </div>
+                    <div style={{ marginBottom: "10px", fontSize: "12px" }}>
+                      <strong style={{ color: "#b0b0b0" }}>状态：</strong>
+                      <span style={{ color: selectedTaskUnit.status === 'done' ? '#28a745' : '#f59e0b', marginLeft: "4px" }}>
+                        {selectedTaskUnit.status === 'done' ? '已完成 ✓' : '进行中'}
+                      </span>
+                    </div>
                     <button
+                      onClick={() => {
+                        const targetTask = tasks.find(t => t.id === selectedTaskUnit.task_id);
+                        if (!targetTask) return;
+                        
+                        // 更新任务单元状态为完成
+                        const updatedTaskUnit = { ...selectedTaskUnit, completed_amount: selectedTaskUnit.planned_amount, status: 'done' as const };
+                        setTaskUnits(taskUnits.map(tu => tu.id === selectedTaskUnit.id ? updatedTaskUnit : tu));
+                        setSelectedTaskUnit(updatedTaskUnit);
+                        
+                        // 更新任务进度
+                        const newProgress = Math.min(targetTask.progress + updatedTaskUnit.completed_amount, targetTask.total);
+                        const updatedTask = { ...targetTask, progress: newProgress };
+                        setTasks(tasks.map(t => t.id === selectedTaskUnit.task_id ? updatedTask : t));
+                      }}
+                      disabled={selectedTaskUnit.status === 'done'}
                       style={{
                         width: "100%",
                         padding: "6px",
-                        backgroundColor: "#2a6dd3",
+                        backgroundColor: selectedTaskUnit.status === 'done' ? "#555" : "#28a745",
                         color: "white",
                         border: "none",
                         borderRadius: "4px",
-                        cursor: "pointer",
+                        cursor: selectedTaskUnit.status === 'done' ? "not-allowed" : "pointer",
                         fontSize: "12px",
                         transition: "all 0.2s"
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#3275dd"}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2a6dd3"}
+                      onMouseEnter={(e) => {
+                        if (selectedTaskUnit.status !== 'done') {
+                          e.currentTarget.style.backgroundColor = "#32b14a";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedTaskUnit.status !== 'done') {
+                          e.currentTarget.style.backgroundColor = "#28a745";
+                        }
+                      }}
                     >
-                      ✅ 打卡完成
+                      {selectedTaskUnit.status === 'done' ? '✅ 已打卡' : '✅ 打卡完成'}
                     </button>
                   </div>
                 </div>
