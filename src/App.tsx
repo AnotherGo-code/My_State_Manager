@@ -95,6 +95,13 @@ export default function App() {
   // const [newTaskColor, setNewTaskColor] = useState("#10B981");
   const [newDiaryEntry, setNewDiaryEntry] = useState("");
 
+  // 示例事件（仅用于界面演示）
+  const exampleEvents = [
+    { id: 'e1', dayIndex: 0, startHour: 9, duration: 1, color: '#fb923c', title: 'Math', sub: 'Reading +3' },
+    { id: 'e2', dayIndex: 2, startHour: 10, duration: 2, color: '#fda4af', title: 'Physics', sub: '' },
+    { id: 'e3', dayIndex: 2, startHour: 12, duration: 1, color: '#fb923c', title: 'Math', sub: '' },
+  ];
+
   async function fetchCourses() {
     try {
       const { data, error } = await supabase.from("courses").select("*");
@@ -520,7 +527,7 @@ export default function App() {
               </div>
 
               {/* Diary区域 */}
-              <div style={{ flex: 1, padding: "20px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div style={{ flex: 1, padding: "20px", overflow: "hidden", display: "flex", flexDirection: "column", position: 'relative' }}>
                 <h3 style={{ margin: 0, marginBottom: "12px", color: "#1f2937", fontSize: "18px" }}>📝 Diary</h3>
                 <div style={{ marginBottom: "12px" }}>
                   <textarea
@@ -558,22 +565,10 @@ export default function App() {
                   {new Date().toLocaleDateString('zh-CN')}
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto" }}>
-                  {[] /* diaryEntries */.map((entry: any) => (
-                    <div key={entry.id} style={{
-                      backgroundColor: "white",
-                      padding: "8px",
-                      marginBottom: "6px",
-                      borderRadius: "4px",
-                      border: "1px solid #e5e7eb",
-                      fontSize: "12px"
-                    }}>
-                      <div style={{ color: "#9ca3af", marginBottom: "2px" }}>
-                        {new Date(entry.created_at).toLocaleTimeString('zh-CN')}
-                      </div>
-                      <div>{entry.content}</div>
-                    </div>
-                  ))}
+                <div style={{ flex: 1, overflowY: "auto", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ color: '#bfe9f6', fontSize: 56, fontWeight: 700, opacity: 0.6, textAlign: 'center', lineHeight: 1.1 }}>
+                    Dairy / Log Area
+                  </div>
                 </div>
               </div>
             </div>
@@ -658,14 +653,22 @@ export default function App() {
                   </div>
                 </div>
                 <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "60px repeat(5, 1fr)",
-                  gap: "1px",
-                  backgroundColor: "#e5e7eb",
+                  padding: "6px",
+                  border: "3px solid #111",
                   borderRadius: "8px",
-                  overflow: "hidden",
-                  height: "calc(100% - 60px)"
+                  backgroundColor: "transparent",
+                  height: "calc(100% - 60px)",
+                  overflow: "hidden"
                 }}>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "60px repeat(5, 1fr)",
+                    gap: "4px",
+                    backgroundColor: "#efe7ff",
+                    borderRadius: "6px",
+                    height: "100%",
+                    overflow: "auto"
+                  }}>
                   {/* 时间列标题 */}
                   <div style={{ backgroundColor: "#f9fafb", padding: "12px 8px", fontWeight: "600", color: "#374151", fontSize: "14px" }}>
                     时间
@@ -700,19 +703,41 @@ export default function App() {
                             style={{
                               backgroundColor: "white",
                               minHeight: "60px",
-                              padding: "4px",
-                              borderTop: "1px solid #e5e7eb",
+                              padding: "6px",
                               cursor: "pointer",
-                              position: "relative"
+                              position: "relative",
+                              overflow: 'visible'
                             }}
                             onClick={() => {/* TODO: 处理时间格子点击 */}}
                           >
-                            {/* 这里会显示课程和任务单元 */}
+                            {/* 渲染示例事件（如果匹配） */}
+                            {exampleEvents.filter(ev => ev.dayIndex === dayIndex && ev.startHour === hour).map(ev => (
+                              <div key={ev.id} style={{
+                                position: 'absolute',
+                                top: 6,
+                                left: 6,
+                                right: 6,
+                                height: 32,
+                                backgroundColor: ev.color,
+                                color: 'white',
+                                borderRadius: 6,
+                                padding: '4px 8px',
+                                fontSize: 12,
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center'
+                              }}>
+                                <div style={{ fontWeight: 700, lineHeight: 1 }}>{ev.title}</div>
+                                {ev.sub && <div style={{ fontSize: 11, opacity: 0.95 }}>{ev.sub}</div>}
+                              </div>
+                            ))}
                           </div>
                         ))}
                       </div>
                     );
                   })}
+                  </div>
                 </div>
               </div>
             </div>
