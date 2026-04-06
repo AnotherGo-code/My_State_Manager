@@ -12,7 +12,9 @@ const Sidebar: React.FC<SidebarProps> = ({ newDiaryEntry, setNewDiaryEntry }) =>
     borderRight: "1px solid #2a2a2a",
     display: "flex",
     flexDirection: "column",
-    overflow: "hidden"
+    overflow: "hidden",
+    height: "100%",
+    minWidth: "200px"
   }}>
     {/* Diary 区域 - 与时间表顶部齐平 */}
     <div style={{ flex: 1, padding: "16px", overflow: "hidden", display: "flex", flexDirection: "column", marginTop: 0 }}>

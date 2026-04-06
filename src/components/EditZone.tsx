@@ -33,7 +33,9 @@ const EditZone: React.FC<EditZoneProps> = ({
     padding: "16px",
     overflowY: "auto",
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    height: "100%",
+    minWidth: "200px"
   }}>
     <h3 style={{ marginTop: 0, color: "#2a6dd3", fontSize: "32px", textAlign: 'center', lineHeight: 1.0, fontWeight: 400 }}>Edit<br/>Zone</h3>
     {!selectedTaskUnit && !editingCourse && !editingTask && (

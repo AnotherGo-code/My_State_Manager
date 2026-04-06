@@ -364,16 +364,16 @@ export default function App() {
           />
 
           {/* 主内容区域：3列布局 */}
-          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-            {/* 左侧边栏 */}
+          <div style={{ flex: 1, display: "flex", overflow: "hidden", width: "100%" }}>
+            {/* 左侧边栏 - Diary */}
             <Sidebar 
               newDiaryEntry={newDiaryEntry} 
               setNewDiaryEntry={setNewDiaryEntry} 
             />
 
-            {/* 中间区域 */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", backgroundColor: "#0f0f0f" }}>
-              {/* 课程和任务卡片组件 */}
+            {/* 中间区域 - 课程、任务、时间表 */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", backgroundColor: "#0f0f0f", minWidth: 0 }}>
+              {/* 课程和任务卡片组件 - 固定高度或比例 */}
               <CoursesAndTasks
                 courses={courses}
                 tasks={tasks}
@@ -382,7 +382,7 @@ export default function App() {
                 setEditingTask={setEditingTask}
               />
               
-              {/* 时间表组件 */}
+              {/* 时间表组件 - 占用剩余空间 */}
               <Timetable 
                 taskUnits={taskUnits} 
                 tasks={tasks} 

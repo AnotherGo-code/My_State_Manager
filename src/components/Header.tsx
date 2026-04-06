@@ -173,13 +173,14 @@ const Header: React.FC<HeaderProps> = ({ userEmail, showCalendar, setShowCalenda
     <header style={{
       height: "160px",
       backgroundColor: "#1a1a1a",
-      borderBottom: "1px solid #2a2a2a",
+      borderBottom: "2px solid #3a3a3a",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
       padding: "0 24px",
       boxShadow: "none",
-      position: "relative"
+      position: "relative",
+      flexShrink: 0
     }}>
       {/* 左侧：学校名称、用户头像、用户名 */}
       <div style={{ display: "flex", flexDirection: "column", gap: "16px", flex: 1 }}>

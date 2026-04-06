@@ -17,14 +17,15 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
   setEditingTask
 }) => (
   <div style={{
-    flex: "0 0 auto",
-    height: "210px",
+    height: "auto",
+    maxHeight: "240px",
     padding: "12px 16px",
     borderBottom: "1px solid #2a2a2a",
     backgroundColor: "#0f0f0f",
     display: "flex",
     gap: "0",
-    overflow: "hidden"
+    overflow: "auto",
+    flexShrink: 0
   }}>
     {/* 左侧：课程列表 */}
     <div style={{
