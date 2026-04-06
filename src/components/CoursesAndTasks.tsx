@@ -1,24 +1,22 @@
 import React from "react";
-import type { Course, Task, TaskUnit } from "../App";
+import type { Course, Task } from "../App";
 
 interface CoursesAndTasksProps {
   courses: Course[];
   tasks: Task[];
-  taskUnits: TaskUnit[];
-  setEditingCourse: (course: Course | null) => void;
-  setEditingTask: (task: Task | null) => void;
+  setEditingCourse: (course: Course) => void;
+  setEditingTask: (task: Task) => void;
 }
 
 const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
   courses,
   tasks,
-  taskUnits,
   setEditingCourse,
   setEditingTask
 }) => (
   <div style={{
     height: "auto",
-    maxHeight: "240px",
+    maxHeight: "280px",
     padding: "12px 16px",
     borderBottom: "1px solid #2a2a2a",
     backgroundColor: "#0f0f0f",
@@ -27,20 +25,14 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
     overflow: "auto",
     flexShrink: 0
   }}>
-    {/* 左侧：课程列表 */}
-    <div style={{
-      flex: "0 0 33.33%",
-      display: "flex",
-      flexDirection: "column",
-      borderRight: "none",
-      paddingRight: "12px"
-    }}>
+    {/* Left: Courses panel (33.33%) */}
+    <div style={{ flex: "0 0 33.33%", display: "flex", flexDirection: "column", paddingRight: "12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
         <h3 style={{ margin: 0, color: "#b0b0b0", fontSize: "12px", fontWeight: "400", letterSpacing: "0.5px" }}>
           Courses:
         </h3>
         <button
-          onClick={() => setEditingCourse({} as Course)}
+          onClick={() => setEditingCourse(createEmptyCourse())}
           style={{
             padding: "3px 8px",
             backgroundColor: "#2a6dd3",
@@ -48,17 +40,13 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
             border: "none",
             borderRadius: "3px",
             cursor: "pointer",
-            fontSize: "10px",
-            transition: "all 0.2s"
+            fontSize: "10px"
           }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = "#3275dd"}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = "#2a6dd3"}
         >
           +
         </button>
       </div>
-      {/* 课程堆栈 */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px", overflow: "auto", flex: 1 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px", overflow: "auto", flex: 1 }}>
         {courses.length === 0 ? (
           <div style={{ fontSize: "11px", color: "#666", fontStyle: "italic" }}>No courses</div>
         ) : (
@@ -72,46 +60,35 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
                 gap: "6px",
                 padding: "4px 0",
                 cursor: "pointer",
-                transition: "all 0.2s",
                 minHeight: "24px"
               }}
-              onMouseEnter={e => {
-                e.currentTarget.style.opacity = "0.8";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.opacity = "1";
-              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "0.8"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
             >
               <div
                 style={{
-                  width: "4px",
-                  height: "4px",
+                  width: "7px",
+                  height: "7px",
                   borderRadius: "50%",
-                  backgroundColor: course.color,
+                  backgroundColor: course.color || "#666",
                   flexShrink: 0
                 }}
               />
-              <span style={{ fontSize: "11px", color: "#b0b0b0" }}>{course.name}</span>
+              <span style={{ fontSize: "11px", color: "#b0b0b0", fontWeight: "400" }}>{course.name}</span>
             </div>
           ))
         )}
       </div>
     </div>
 
-    {/* 右侧：任务卡片 */}
-    <div style={{
-      flex: "0 0 66.66%",
-      display: "flex",
-      flexDirection: "column",
-      borderLeft: "none",
-      paddingLeft: "12px"
-    }}>
+    {/* Right: Tasks panel (66.66%) */}
+    <div style={{ flex: "0 0 66.66%", display: "flex", flexDirection: "column", paddingLeft: "12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
         <h3 style={{ margin: 0, color: "#b0b0b0", fontSize: "12px", fontWeight: "400", letterSpacing: "0.5px" }}>
           Tasks:
         </h3>
         <button
-          onClick={() => setEditingTask({} as Task)}
+          onClick={() => setEditingTask(createEmptyTask())}
           style={{
             padding: "3px 8px",
             backgroundColor: "#28a745",
@@ -119,26 +96,19 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
             border: "none",
             borderRadius: "3px",
             cursor: "pointer",
-            fontSize: "10px",
-            transition: "all 0.2s"
+            fontSize: "10px"
           }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = "#32b14a"}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = "#28a745"}
         >
           +
         </button>
       </div>
-      {/* 任务堆栈 */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px", overflow: "auto", flex: 1 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px", overflow: "auto", flex: 1 }}>
         {tasks.length === 0 ? (
           <div style={{ fontSize: "11px", color: "#666", fontStyle: "italic" }}>No tasks</div>
         ) : (
           tasks.map(task => {
-            const relatedUnits = taskUnits.filter(tu => tu.task_id === task.id);
-            const completedUnits = relatedUnits.filter(tu => tu.status === 'done').length;
-            const completionPercent = task.total > 0 ? (task.progress / task.total) * 100 : 0;
-            const completedPercent = Math.min(completionPercent, 100);
-            
+            const completionPercent = task.total > 0 ? Math.min((task.progress / task.total) * 100, 100) : 0;
+
             return (
               <div
                 key={task.id}
@@ -146,63 +116,90 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
                 style={{
                   padding: "4px 0",
                   cursor: "pointer",
-                  transition: "all 0.2s",
-                  minHeight: "50px",
                   display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between"
+                  alignItems: "center",
+                  gap: "4px",
+                  width: "100%"
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.opacity = "0.8";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.opacity = "1";
-                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = "0.8"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
               >
-                {/* 任务名 + 彩色圆点 + 比例 */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div
-                      style={{
-                        width: "6px",
-                        height: "6px",
-                        borderRadius: "50%",
-                        backgroundColor: task.color,
-                        flexShrink: 0
-                      }}
-                    />
-                    <span style={{ fontSize: "11px", color: "#b0b0b0", fontWeight: "400" }}>{task.name}</span>
-                  </div>
-                  <span style={{ fontSize: "10px", color: "#666" }}>({task.progress}/{task.total})</span>
-                </div>
+                {/* Color dot */}
+                <div
+                  style={{
+                    width: "7px",
+                    height: "7px",
+                    borderRadius: "50%",
+                    backgroundColor: task.color || "#666",
+                    flexShrink: 0,
+                    marginRight: "2px"
+                  }}
+                />
 
-                {/* 简约线条进度条：粗线代表已完成，细线代表未完成 */}
-                <div style={{ display: "flex", gap: "1px", height: "8px", alignItems: "center" }}>
-                  {/* 已完成部分 - 粗线 */}
+                {/* Task name */}
+                <span style={{
+                  fontSize: "11px",
+                  color: "#b0b0b0",
+                  fontWeight: "400",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  flex: "0 1 auto"
+                }}>
+                  {task.name}
+                </span>
+
+                {/* Percentage */}
+                <span style={{
+                  fontSize: "9px",
+                  color: "#666",
+                  whiteSpace: "nowrap",
+                  marginLeft: "1px",
+                  minWidth: "24px",
+                  textAlign: "right"
+                }}>
+                  {Math.round(completionPercent)}%
+                </span>
+
+                {/* Progress bar */}
+                <div style={{
+                  display: "flex",
+                  gap: "0",
+                  height: "5px",
+                  alignItems: "center",
+                  width: "40px",
+                  flexShrink: 0,
+                  margin: "0 1px"
+                }}>
+                  {/* Completed part (thick) */}
                   <div style={{
-                    flex: `0 0 ${completedPercent}%`,
+                    flex: `0 0 ${completionPercent}%`,
                     height: "3px",
-                    backgroundColor: task.color,
-                    borderRadius: "1.5px",
-                    transition: "flex 0.3s ease"
+                    backgroundColor: task.color || "#666",
+                    borderRadius: "1.5px"
                   }} />
-                  {/* 未完成部分 - 细线 */}
-                  <div style={{
-                    flex: `0 0 ${100 - completedPercent}%`,
-                    height: "1px",
-                    backgroundColor: "#444",
-                    borderRadius: "0.5px",
-                    transition: "flex 0.3s ease"
-                  }} />
-                </div>
-
-                {/* 百分比 + 任务单元统计 */}
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "9px", color: "#666", marginTop: "3px" }}>
-                  <span>{Math.round(completedPercent)}%</span>
-                  {relatedUnits.length > 0 && (
-                    <span>{completedUnits}/{relatedUnits.length} units</span>
+                  {/* Remaining part (thin) */}
+                  {completionPercent < 100 && (
+                    <div style={{
+                      flex: `0 0 ${100 - completionPercent}%`,
+                      height: "1px",
+                      backgroundColor: "#444",
+                      borderRadius: "0.5px"
+                    }} />
                   )}
                 </div>
+
+                {/* Progress numbers */}
+                <span style={{
+                  fontSize: "8px",
+                  color: "#555",
+                  whiteSpace: "nowrap",
+                  marginLeft: "1px",
+                  minWidth: "35px",
+                  textAlign: "right"
+                }}>
+                  {task.progress}/{task.total}
+                </span>
               </div>
             );
           })
@@ -211,5 +208,34 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
     </div>
   </div>
 );
+
+// =============================================
+// Helpers: Create empty items (type-safe)
+// =============================================
+
+function createEmptyCourse(): Course {
+  return {
+    id: "",
+    user_id: "",
+    name: "",
+    color: "#3B82F6",
+    schedule: [],
+    is_optional: false,
+    note: "",
+    created_at: ""
+  };
+}
+
+function createEmptyTask(): Task {
+  return {
+    id: "",
+    user_id: "",
+    name: "",
+    progress: 0,
+    total: 100,
+    color: "#10B981",
+    created_at: ""
+  };
+}
 
 export default CoursesAndTasks;
