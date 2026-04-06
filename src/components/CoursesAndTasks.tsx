@@ -29,7 +29,7 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
   }}>
     {/* 左侧：课程列表 */}
     <div style={{
-      flex: "0 0 50%",
+      flex: "0 0 33.33%",
       display: "flex",
       flexDirection: "column",
       borderRight: "none",
@@ -70,21 +70,16 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                padding: "6px 8px",
-                borderRadius: "3px",
+                padding: "4px 0",
                 cursor: "pointer",
-                backgroundColor: "#1a1a1a",
-                border: "1px solid #2a2a2a",
                 transition: "all 0.2s",
-                minHeight: "28px"
+                minHeight: "24px"
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = "#1f1f1f";
-                e.currentTarget.style.borderColor = "#3a3a3a";
+                e.currentTarget.style.opacity = "0.8";
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = "#1a1a1a";
-                e.currentTarget.style.borderColor = "#2a2a2a";
+                e.currentTarget.style.opacity = "1";
               }}
             >
               <div
@@ -105,7 +100,7 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
 
     {/* 右侧：任务卡片 */}
     <div style={{
-      flex: "0 0 50%",
+      flex: "0 0 66.66%",
       display: "flex",
       flexDirection: "column",
       borderLeft: "none",
@@ -149,11 +144,8 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
                 key={task.id}
                 onClick={() => setEditingTask(task)}
                 style={{
-                  padding: "6px 8px",
-                  borderRadius: "3px",
+                  padding: "4px 0",
                   cursor: "pointer",
-                  backgroundColor: "#1a1a1a",
-                  border: "1px solid #2a2a2a",
                   transition: "all 0.2s",
                   minHeight: "50px",
                   display: "flex",
@@ -161,17 +153,26 @@ const CoursesAndTasks: React.FC<CoursesAndTasksProps> = ({
                   justifyContent: "space-between"
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.backgroundColor = "#1f1f1f";
-                  e.currentTarget.style.borderColor = "#3a3a3a";
+                  e.currentTarget.style.opacity = "0.8";
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.backgroundColor = "#1a1a1a";
-                  e.currentTarget.style.borderColor = "#2a2a2a";
+                  e.currentTarget.style.opacity = "1";
                 }}
               >
-                {/* 任务名 + 比例 */}
+                {/* 任务名 + 彩色圆点 + 比例 */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <span style={{ fontSize: "11px", color: task.color, fontWeight: "500" }}>{task.name}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        backgroundColor: task.color,
+                        flexShrink: 0
+                      }}
+                    />
+                    <span style={{ fontSize: "11px", color: "#b0b0b0", fontWeight: "400" }}>{task.name}</span>
+                  </div>
                   <span style={{ fontSize: "10px", color: "#666" }}>({task.progress}/{task.total})</span>
                 </div>
 

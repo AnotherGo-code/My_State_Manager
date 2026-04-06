@@ -31,7 +31,7 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, setSelectedTask
     }}>
       <div style={{
         display: "grid",
-        gridTemplateColumns: "45px repeat(5, 1fr)",
+        gridTemplateColumns: "40px repeat(7, 1fr)",
         gap: "1px",
         backgroundColor: "#1a1a2e",
         borderRadius: "3px",
@@ -44,7 +44,7 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, setSelectedTask
           Time
         </div>
         {/* 星期列标题 */}
-        {["Mon", "Tue", "Wed", "Thu", "Fri"].map(day => (
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
           <div key={day} style={{ backgroundColor: "#252a3a", padding: "6px 3px", fontWeight: "400", color: "#666", textAlign: "center", fontSize: "9px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {day}
           </div>
@@ -55,7 +55,7 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, setSelectedTask
           return (
             <React.Fragment key={hour}>
               <div style={{ backgroundColor: "#252a3a", padding: "6px 3px", fontSize: "9px", color: "#666", display: "flex", alignItems: "center", justifyContent: "center" }}>{hour}:00</div>
-              {[0, 1, 2, 3, 4].map(dayIndex => {
+              {[0, 1, 2, 3, 4, 5, 6].map(dayIndex => {
                 // 查找该时间段内的课程
                 const matchingCourses = courses.filter(course => {
                   const schedule = course.schedule || [];
