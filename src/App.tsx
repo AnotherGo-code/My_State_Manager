@@ -56,10 +56,8 @@ export interface Diary {
   created_at: string;
 }
 
-// Helpers moved to CoursesAndTasks.tsx to avoid duplication
-
 // =============================================
-// Demo data for logged-out state
+// Demo data - used as default for ALL users (logged in or not)
 // =============================================
 
 const demoCourses: Course[] = [
@@ -156,6 +154,29 @@ const demoTaskUnits: TaskUnit[] = [
 ];
 
 // =============================================
+// Helper: Parse course from Supabase (handle JSONB schedule)
+// =============================================
+
+function parseCourse(raw: any): Course {
+  let schedule: Course["schedule"] = [];
+  try {
+    if (typeof raw.schedule === "string") {
+      schedule = JSON.parse(raw.schedule);
+    } else if (Array.isArray(raw.schedule)) {
+      schedule = raw.schedule;
+    }
+  } catch {
+    schedule = [];
+  }
+  return {
+    ...raw,
+    schedule,
+    is_optional: raw.is_optional ?? false,
+    note: raw.note ?? ""
+  };
+}
+
+// =============================================
 // Main App Component
 // =============================================
 
@@ -166,10 +187,10 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
 
-  // Data states
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [taskUnits, setTaskUnits] = useState<TaskUnit[]>([]);
+  // Data states - initialized with demo data to avoid flash
+  const [courses, setCourses] = useState<Course[]>(demoCourses);
+  const [tasks, setTasks] = useState<Task[]>(demoTasks);
+  const [taskUnits, setTaskUnits] = useState<TaskUnit[]>(demoTaskUnits);
   const [diaries, setDiaries] = useState<Diary[]>([]);
 
   // UI states
@@ -178,6 +199,9 @@ export default function App() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newDiaryEntry, setNewDiaryEntry] = useState("");
+
+  // Track if we've loaded real data (state instead of ref so UI updates)
+  const [hasLoadedRealData, setHasLoadedRealData] = useState(false);
 
   // =============================================
   // Auth initialization
@@ -190,11 +214,8 @@ export default function App() {
     const initializeSession = async () => {
       try {
         const result = await getSessionWithTimeout(8000);
-
         if (!isMounted) return;
-
         const { data, error } = result;
-
         if (error) {
           console.error("Get session error:", error);
           setUser(null);
@@ -207,9 +228,7 @@ export default function App() {
         console.error("Session initialization failed:", err);
         setUser(null);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
 
@@ -220,7 +239,6 @@ export default function App() {
       }
     });
     unsubscribe = data?.subscription?.unsubscribe;
-
     initializeSession();
 
     return () => {
@@ -237,6 +255,9 @@ export default function App() {
     if (!user) return;
 
     const userId = user.id;
+    console.log("[App] Fetching data for user:", userId);
+
+    let anyDataLoaded = false;
 
     try {
       const [coursesRes, tasksRes, taskUnitsRes, diariesRes] = await Promise.all([
@@ -246,19 +267,49 @@ export default function App() {
         supabase.from("diaries").select("*").eq("user_id", userId).order("created_at", { ascending: false })
       ]);
 
-      if (coursesRes.error) console.error("Error fetching courses:", coursesRes.error);
-      else setCourses(coursesRes.data?.map(parseCourse) || []);
+      // Only mark as loaded if at least one table has actual data
+      if (!coursesRes.error && coursesRes.data && coursesRes.data.length > 0) {
+        const parsed = coursesRes.data.map(parseCourse);
+        console.log(`[App] Loaded ${parsed.length} courses`);
+        setCourses(parsed);
+        anyDataLoaded = true;
+      } else if (!coursesRes.error) {
+        console.log("[App] Courses query succeeded but returned 0 rows (using demo courses)");
+      } else {
+        console.error("[App] Error fetching courses:", coursesRes.error);
+      }
 
-      if (tasksRes.error) console.error("Error fetching tasks:", tasksRes.error);
-      else setTasks(tasksRes.data || []);
+      if (!tasksRes.error && tasksRes.data && tasksRes.data.length > 0) {
+        console.log(`[App] Loaded ${tasksRes.data.length} tasks`);
+        setTasks(tasksRes.data);
+        anyDataLoaded = true;
+      } else if (!tasksRes.error) {
+        console.log("[App] Tasks query succeeded but returned 0 rows (using demo tasks)");
+      } else {
+        console.error("[App] Error fetching tasks:", tasksRes.error);
+      }
 
-      if (taskUnitsRes.error) console.error("Error fetching task units:", taskUnitsRes.error);
-      else setTaskUnits(taskUnitsRes.data || []);
+      if (!taskUnitsRes.error && taskUnitsRes.data && taskUnitsRes.data.length > 0) {
+        console.log(`[App] Loaded ${taskUnitsRes.data.length} task_units`);
+        setTaskUnits(taskUnitsRes.data);
+        anyDataLoaded = true;
+      } else if (!taskUnitsRes.error) {
+        console.log("[App] Task units query succeeded but returned 0 rows (using demo task_units)");
+      } else {
+        console.error("[App] Error fetching task_units:", taskUnitsRes.error);
+      }
 
-      if (diariesRes.error) console.error("Error fetching diaries:", diariesRes.error);
-      else setDiaries(diariesRes.data || []);
+      if (!diariesRes.error) {
+        setDiaries(diariesRes.data || []);
+      } else {
+        console.error("[App] Error fetching diaries:", diariesRes.error);
+      }
+
+      setHasLoadedRealData(anyDataLoaded);
     } catch (err) {
-      console.error("Fetch all data failed:", err);
+      console.error("[App] Fetch all data failed:", err);
+      console.warn("[App] Keeping demo data as fallback");
+      setHasLoadedRealData(false);
     }
   }, [user]);
 
@@ -266,11 +317,69 @@ export default function App() {
     if (user) {
       fetchAllData();
     } else {
-      // Demo data when logged out
+      // Reset to demo data when logged out
       setCourses(demoCourses);
       setTasks(demoTasks);
       setTaskUnits(demoTaskUnits);
       setDiaries([]);
+      setHasLoadedRealData(false);
+    }
+  }, [user, fetchAllData]);
+
+  // =============================================
+  // Initialize sample data for current user (one-time setup)
+  // =============================================
+
+  const initializeSampleData = useCallback(async () => {
+    if (!user) return;
+    if (!confirm("这将向你的账户添加示例数据（课程、任务、任务单元）。确定？")) return;
+
+    const userId = user.id;
+
+    try {
+      // Insert demo tasks first
+      const { data: insertedTasks, error: taskErr } = await supabase
+        .from("tasks")
+        .insert([
+          { user_id: userId, name: "Reading", progress: 147, total: 194, color: "#eab308" },
+          { user_id: userId, name: "Exercising", progress: 37, total: 121, color: "#60a5fa" }
+        ])
+        .select();
+
+      if (taskErr) throw taskErr;
+
+      const taskMap: Record<string, string> = {
+        "demo-t1": insertedTasks[0].id,
+        "demo-t2": insertedTasks[1].id
+      };
+
+      // Insert demo courses
+      const { error: courseErr } = await supabase
+        .from("courses")
+        .insert([
+          { user_id: userId, name: "Maths", color: "#fb923c", schedule: JSON.stringify([{ day_of_week: 0, start_time: "09:00", end_time: "10:30" }, { day_of_week: 2, start_time: "13:00", end_time: "14:30" }]), is_optional: false },
+          { user_id: userId, name: "Physics", color: "#fda4af", schedule: JSON.stringify([{ day_of_week: 1, start_time: "10:00", end_time: "11:30" }, { day_of_week: 3, start_time: "10:00", end_time: "11:30" }]), is_optional: true }
+        ]);
+
+      if (courseErr) throw courseErr;
+
+      // Insert demo task units
+      const { error: tuErr } = await supabase
+        .from("task_units")
+        .insert([
+          { user_id: userId, task_id: taskMap["demo-t1"], day_of_week: 0, start_time: "09:00", end_time: "10:00", planned_amount: 3 },
+          { user_id: userId, task_id: taskMap["demo-t1"], day_of_week: 2, start_time: "14:00", end_time: "15:00", planned_amount: 2 },
+          { user_id: userId, task_id: taskMap["demo-t2"], day_of_week: 1, start_time: "10:00", end_time: "12:00", planned_amount: 5 },
+          { user_id: userId, task_id: taskMap["demo-t2"], day_of_week: 3, start_time: "15:00", end_time: "16:00", planned_amount: 2 }
+        ]);
+
+      if (tuErr) throw tuErr;
+
+      alert("✅ 示例数据已添加！");
+      await fetchAllData();
+    } catch (err: any) {
+      console.error("Init sample data error:", err);
+      alert("初始化失败：" + (err.message || err));
     }
   }, [user, fetchAllData]);
 
@@ -283,7 +392,7 @@ export default function App() {
 
     const courseData = { ...course, user_id: user.id };
 
-    if (course.id && course.id !== "") {
+    if (course.id && course.id !== "" && !course.id.startsWith("demo-")) {
       // Update existing
       const { error } = await supabase.from("courses").update({
         name: courseData.name,
@@ -299,7 +408,7 @@ export default function App() {
         return;
       }
     } else {
-      // Insert new
+      // Insert new (or re-insert demo course)
       const { data, error } = await supabase.from("courses").insert(courseData).select();
       if (error) {
         console.error("Insert course error:", error);
@@ -316,7 +425,14 @@ export default function App() {
   }, [user, fetchAllData]);
 
   const deleteCourse = useCallback(async (courseId: string) => {
-    if (!user || !courseId) return;
+    if (!courseId) return;
+    if (courseId.startsWith("demo-")) {
+      // Demo courses can be removed from local state only
+      setCourses(prev => prev.filter(c => c.id !== courseId));
+      setEditingCourse(null);
+      return;
+    }
+    if (!user) return;
     if (!confirm("确定要删除这门课程吗？")) return;
 
     const { error } = await supabase.from("courses").delete().eq("id", courseId);
@@ -339,8 +455,7 @@ export default function App() {
 
     const taskData = { ...task, user_id: user.id };
 
-    if (task.id && task.id !== "") {
-      // Update existing
+    if (task.id && task.id !== "" && !task.id.startsWith("demo-")) {
       const { error } = await supabase.from("tasks").update({
         name: taskData.name,
         progress: taskData.progress,
@@ -354,7 +469,6 @@ export default function App() {
         return;
       }
     } else {
-      // Insert new
       const { data, error } = await supabase.from("tasks").insert(taskData).select();
       if (error) {
         console.error("Insert task error:", error);
@@ -371,7 +485,14 @@ export default function App() {
   }, [user, fetchAllData]);
 
   const deleteTask = useCallback(async (taskId: string) => {
-    if (!user || !taskId) return;
+    if (!taskId) return;
+    if (taskId.startsWith("demo-")) {
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setTaskUnits(prev => prev.filter(tu => tu.task_id !== taskId));
+      setEditingTask(null);
+      return;
+    }
+    if (!user) return;
     if (!confirm("确定要删除这个任务吗？相关的任务单元也会被删除。")) return;
 
     const { error } = await supabase.from("tasks").delete().eq("id", taskId);
@@ -390,43 +511,45 @@ export default function App() {
   // =============================================
 
   const checkInTaskUnit = useCallback(async (taskUnit: TaskUnit) => {
-    if (!user) return;
-
+    // Update local state immediately for responsive UI
     const targetTask = tasks.find(t => t.id === taskUnit.task_id);
     if (!targetTask) return;
 
-    // Update task unit
     const updatedTaskUnit = {
       ...taskUnit,
       completed_amount: taskUnit.planned_amount,
       status: "done" as const
     };
-
-    const { error: tuError } = await supabase.from("task_units").update({
-      completed_amount: updatedTaskUnit.completed_amount,
-      status: updatedTaskUnit.status
-    }).eq("id", taskUnit.id);
-
-    if (tuError) {
-      console.error("Update task unit error:", tuError);
-      alert("打卡失败：" + tuError.message);
-      return;
-    }
-
-    // Update task progress
     const newProgress = Math.min(targetTask.progress + taskUnit.planned_amount, targetTask.total);
-    const { error: taskError } = await supabase.from("tasks").update({
-      progress: newProgress
-    }).eq("id", targetTask.id);
 
-    if (taskError) {
-      console.error("Update task progress error:", taskError);
-    }
-
-    // Update local state
+    // Optimistic update
     setTaskUnits(prev => prev.map(tu => tu.id === taskUnit.id ? updatedTaskUnit : tu));
     setTasks(prev => prev.map(t => t.id === targetTask.id ? { ...t, progress: newProgress } : t));
     setSelectedTaskUnit(updatedTaskUnit);
+
+    // Sync to Supabase (only for non-demo data)
+    if (taskUnit.id.startsWith("demo-") || !user) {
+      console.log("[App] Demo task unit checked in (local only)");
+      return;
+    }
+
+    try {
+      const [{ error: tuError }, { error: taskError }] = await Promise.all([
+        supabase.from("task_units").update({ completed_amount: updatedTaskUnit.completed_amount, status: "done" }).eq("id", taskUnit.id),
+        supabase.from("tasks").update({ progress: newProgress }).eq("id", targetTask.id)
+      ]);
+
+      if (tuError) {
+        console.error("Sync task_unit error:", tuError);
+        // Revert optimistic update
+        setTaskUnits(prev => prev.map(tu => tu.id === taskUnit.id ? taskUnit : tu));
+      }
+      if (taskError) {
+        console.error("Sync task error:", taskError);
+      }
+    } catch (err) {
+      console.error("Check-in sync failed:", err);
+    }
   }, [user, tasks]);
 
   // =============================================
@@ -434,7 +557,21 @@ export default function App() {
   // =============================================
 
   const saveDiary = useCallback(async (content: string) => {
-    if (!user || !content.trim()) return;
+    if (!content.trim()) return;
+
+    if (!user) {
+      // Demo mode: add to local state only
+      const newDiary: Diary = {
+        id: `demo-d-${Date.now()}`,
+        user_id: "demo",
+        content: content.trim(),
+        date: new Date().toISOString().split("T")[0],
+        created_at: new Date().toISOString()
+      };
+      setDiaries(prev => [newDiary, ...prev]);
+      setNewDiaryEntry("");
+      return;
+    }
 
     const today = new Date().toISOString().split("T")[0];
     const { error } = await supabase.from("diaries").insert({
@@ -454,7 +591,12 @@ export default function App() {
   }, [user, fetchAllData]);
 
   const deleteDiary = useCallback(async (diaryId: string) => {
-    if (!user || !diaryId) return;
+    if (!diaryId) return;
+    if (diaryId.startsWith("demo-")) {
+      setDiaries(prev => prev.filter(d => d.id !== diaryId));
+      return;
+    }
+    if (!user) return;
     if (!confirm("确定要删除这条日记吗？")) return;
 
     const { error } = await supabase.from("diaries").delete().eq("id", diaryId);
@@ -494,9 +636,9 @@ export default function App() {
     try {
       await signOut();
       setUser(null);
-      setCourses([]);
-      setTasks([]);
-      setTaskUnits([]);
+      setCourses(demoCourses);
+      setTasks(demoTasks);
+      setTaskUnits(demoTaskUnits);
       setDiaries([]);
       setSelectedTaskUnit(null);
       setEditingCourse(null);
@@ -516,7 +658,7 @@ export default function App() {
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#0f0f0f" }}>
         <div style={{ textAlign: "center" }}>
           <h2 style={{ color: "#fff" }}>⏳ 加载中...</h2>
-          <p style={{ color: "#b0b0b0" }}>正在初始化应用，请稍候...</p>
+          <p style={{ color: "#b0b0b0" }}>正在初始化应用...</p>
         </div>
       </div>
     );
@@ -547,38 +689,17 @@ export default function App() {
           </div>
           <button
             onClick={isLogin ? signIn : signUp}
-            style={{
-              width: "100%",
-              padding: "12px",
-              backgroundColor: "#2a6dd3",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "16px",
-              cursor: "pointer",
-              marginBottom: "10px"
-            }}
+            style={{ width: "100%", padding: "12px", backgroundColor: "#2a6dd3", color: "white", border: "none", borderRadius: "6px", fontSize: "16px", cursor: "pointer", marginBottom: "10px" }}
           >
             {isLogin ? "登录" : "注册"}
           </button>
           <button
             onClick={() => setIsLogin(!isLogin)}
-            style={{
-              width: "100%",
-              padding: "12px",
-              backgroundColor: "transparent",
-              color: "#2a6dd3",
-              border: "1px solid #2a6dd3",
-              borderRadius: "6px",
-              fontSize: "16px",
-              cursor: "pointer"
-            }}
+            style={{ width: "100%", padding: "12px", backgroundColor: "transparent", color: "#2a6dd3", border: "1px solid #2a6dd3", borderRadius: "6px", fontSize: "16px", cursor: "pointer" }}
           >
             {isLogin ? "没有账户？注册" : "已有账户？登录"}
           </button>
-          <p style={{ textAlign: "center", marginTop: "20px", fontSize: "12px", color: "#666" }}>
-            提示：不登录也可以查看演示数据
-          </p>
+          <p style={{ textAlign: "center", marginTop: "20px", fontSize: "12px", color: "#666" }}>提示：不登录也可以查看演示数据</p>
         </div>
       </div>
     );
@@ -587,18 +708,46 @@ export default function App() {
   // Main app layout
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", fontFamily: "Arial, sans-serif", width: "100%", overflow: "hidden", backgroundColor: "#0f0f0f" }}>
-      {/* Header */}
       <Header
         userEmail={user.email || ""}
         userName={user.user_metadata?.name || user.email?.split("@")[0] || "User"}
+        onSignOut={handleSignOut}
         showCalendar={showCalendar}
         setShowCalendar={setShowCalendar}
-        onSignOut={handleSignOut}
       />
 
-      {/* Main content: 3-column flex layout */}
+      {/* Data status bar */}
+      {!hasLoadedRealData && user && (
+        <div style={{
+          backgroundColor: "#1a1a1a",
+          borderBottom: "1px solid #2a2a2a",
+          padding: "8px 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0
+        }}>
+          <span style={{ fontSize: "12px", color: "#fb923c" }}>
+            ℹ️ 当前显示演示数据
+          </span>
+          <button
+            onClick={initializeSampleData}
+            style={{
+              padding: "4px 16px",
+              backgroundColor: "#2a6dd3",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px"
+            }}
+          >
+            📦 初始化示例数据到数据库
+          </button>
+        </div>
+      )}
+
       <div style={{ flex: 1, display: "flex", overflow: "hidden", width: "100%" }}>
-        {/* Left sidebar (18%) - Diary */}
         <Sidebar
           newDiaryEntry={newDiaryEntry}
           setNewDiaryEntry={setNewDiaryEntry}
@@ -607,9 +756,7 @@ export default function App() {
           onDeleteDiary={deleteDiary}
         />
 
-        {/* Center column (64%) - Courses/Tasks + Timetable */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", backgroundColor: "#0f0f0f", minWidth: 0 }}>
-          {/* Upper: Courses and Tasks */}
           <CoursesAndTasks
             courses={courses}
             tasks={tasks}
@@ -617,7 +764,6 @@ export default function App() {
             setEditingTask={setEditingTask}
           />
 
-          {/* Lower: Timetable */}
           <Timetable
             taskUnits={taskUnits}
             tasks={tasks}
@@ -626,9 +772,9 @@ export default function App() {
           />
         </div>
 
-        {/* Right panel (18%) - Edit Zone */}
         <EditZone
           selectedTaskUnit={selectedTaskUnit}
+          setSelectedTaskUnit={setSelectedTaskUnit}
           editingCourse={editingCourse}
           setEditingCourse={setEditingCourse}
           editingTask={editingTask}
@@ -643,27 +789,4 @@ export default function App() {
       </div>
     </div>
   );
-}
-
-// =============================================
-// Helper: Parse course from Supabase (handle JSONB schedule)
-// =============================================
-
-function parseCourse(raw: any): Course {
-  let schedule: Course["schedule"] = [];
-  try {
-    if (typeof raw.schedule === "string") {
-      schedule = JSON.parse(raw.schedule);
-    } else if (Array.isArray(raw.schedule)) {
-      schedule = raw.schedule;
-    }
-  } catch {
-    schedule = [];
-  }
-  return {
-    ...raw,
-    schedule,
-    is_optional: raw.is_optional ?? false,
-    note: raw.note ?? ""
-  };
 }

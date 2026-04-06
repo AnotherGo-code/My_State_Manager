@@ -3,169 +3,90 @@ import React, { useState } from "react";
 interface HeaderProps {
   userEmail: string;
   userName: string;
+  onSignOut: () => void;
   showCalendar: boolean;
   setShowCalendar: (show: boolean) => void;
-  onSignOut: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ userEmail, userName, showCalendar, setShowCalendar, onSignOut }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+const Header: React.FC<HeaderProps> = ({ userEmail, userName, onSignOut, showCalendar, setShowCalendar }) => {
+  const today = new Date();
+  const [calDate, setCalDate] = useState(new Date());
 
-  // Get week info for the selected date
+  // Get week info
   const getWeekInfo = (date: Date) => {
     const d = new Date(date);
     const day = d.getDay();
-    // ISO week: Monday = 1, Sunday = 7
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const startDate = new Date(d.setDate(diff));
     const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 4); // Mon-Fri
+    endDate.setDate(endDate.getDate() + 4);
 
-    const formatDate = (date: Date) => {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const dd = String(date.getDate()).padStart(2, "0");
+    const fmt = (dt: Date) => {
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, "0");
+      const dd = String(dt.getDate()).padStart(2, "0");
       return `${y}.${m}.${dd}`;
     };
 
-    // Calculate week number (simple: days from Jan 1 / 7)
     const jan1 = new Date(date.getFullYear(), 0, 1);
     const daysDiff = Math.floor((date.getTime() - jan1.getTime()) / (1000 * 60 * 60 * 24));
     const weekNum = Math.ceil((daysDiff + jan1.getDay()) / 7);
 
-    return { weekNum: Math.max(1, weekNum), start: formatDate(startDate), end: formatDate(endDate) };
+    return { weekNum: Math.max(1, weekNum), start: fmt(startDate), end: fmt(endDate) };
   };
 
-  const weekInfo = getWeekInfo(selectedDate);
+  const weekInfo = getWeekInfo(today);
 
-  // Render date picker popup
+  // Date Picker
   const renderDatePicker = () => {
-    const year = selectedDate.getFullYear();
-    const month = selectedDate.getMonth();
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay(); // 0=Sun
-
+    const startingDayOfWeek = firstDay.getDay();
     const days: (number | null)[] = Array(startingDayOfWeek).fill(null);
     for (let i = 1; i <= daysInMonth; i++) days.push(i);
-
     const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
-    const monthYear = `${year}年${month + 1}月`;
-    const today = new Date();
+    const todayDate = new Date();
 
     return (
       <div style={{
+        position: "absolute",
+        top: "calc(100% + 8px)",
+        right: 0,
+        zIndex: 1000,
         backgroundColor: "#2a2a2a",
         border: "1px solid #3a3a3a",
         borderRadius: "8px",
-        padding: "12px",
-        width: "280px",
+        padding: "10px",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)"
       }}>
-        {/* Month navigation */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-          <button
-            onClick={() => setSelectedDate(new Date(year, month - 1, 15))}
-            style={{ background: "none", border: "none", color: "#b0b0b0", cursor: "pointer", fontSize: "16px" }}
-          >
-            ◀
-          </button>
-          <span style={{ fontSize: "14px", color: "#fff", fontWeight: "500" }}>{monthYear}</span>
-          <button
-            onClick={() => setSelectedDate(new Date(year, month + 1, 15))}
-            style={{ background: "none", border: "none", color: "#b0b0b0", cursor: "pointer", fontSize: "16px" }}
-          >
-            ▶
-          </button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+          <button onClick={() => setCalDate(new Date(year, month - 1, 15))} style={{ background: "none", border: "none", color: "#b0b0b0", cursor: "pointer", fontSize: "14px" }}>◀</button>
+          <span style={{ fontSize: "13px", color: "#fff", fontWeight: "500" }}>{year}年{month + 1}月</span>
+          <button onClick={() => setCalDate(new Date(year, month + 1, 15))} style={{ background: "none", border: "none", color: "#b0b0b0", cursor: "pointer", fontSize: "14px" }}>▶</button>
         </div>
-
-        {/* Day names row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", marginBottom: "8px" }}>
-          {dayNames.map(day => (
-            <div key={day} style={{ textAlign: "center", fontSize: "11px", color: "#888", fontWeight: "500", padding: "4px" }}>
-              {day}
-            </div>
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "3px", marginBottom: "6px" }}>
+          {dayNames.map(d => <div key={d} style={{ textAlign: "center", fontSize: "10px", color: "#888", padding: "3px" }}>{d}</div>)}
         </div>
-
-        {/* Date grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "3px" }}>
           {days.map((day, idx) => {
-            const isSelected = day === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear();
-            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-
+            const isSelected = day === calDate.getDate() && month === calDate.getMonth();
+            const isToday = day === todayDate.getDate() && month === todayDate.getMonth() && year === todayDate.getFullYear();
             return (
-              <button
-                key={idx}
-                onClick={() => day !== null && setSelectedDate(new Date(year, month, day))}
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  border: day === null ? "none" : "1px solid #3a3a3a",
-                  borderRadius: "4px",
-                  backgroundColor: isSelected ? "#3B82F6" : isToday ? "#333" : day ? "#1a1a1a" : "transparent",
-                  color: day === null ? "transparent" : isSelected ? "#fff" : "#b0b0b0",
-                  cursor: day ? "pointer" : "default",
-                  fontSize: "12px",
-                  transition: "all 0.2s",
-                  padding: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: isToday && !isSelected ? "600" : "400"
-                }}
-                onMouseEnter={e => {
-                  if (day && !isSelected) {
-                    e.currentTarget.style.backgroundColor = "#333";
-                    e.currentTarget.style.color = "#fff";
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (day && !isSelected) {
-                    e.currentTarget.style.backgroundColor = isToday ? "#333" : "#1a1a1a";
-                    e.currentTarget.style.color = "#b0b0b0";
-                  }
-                }}
-              >
-                {day}
-              </button>
+              <button key={idx} onClick={() => day !== null && setCalDate(new Date(year, month, day))} style={{
+                width: "32px", height: "32px", border: "none", borderRadius: "4px",
+                backgroundColor: isSelected ? "#3B82F6" : isToday ? "#333" : day ? "#1a1a1a" : "transparent",
+                color: isSelected ? "#fff" : "#b0b0b0",
+                cursor: day ? "pointer" : "default", fontSize: "11px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center"
+              }}>{day}</button>
             );
           })}
         </div>
-
-        {/* Quick buttons */}
-        <div style={{ display: "flex", gap: "6px", marginTop: "12px" }}>
-          <button
-            onClick={() => setSelectedDate(new Date())}
-            style={{
-              flex: 1,
-              padding: "6px 8px",
-              backgroundColor: "#3B82F6",
-              border: "none",
-              borderRadius: "4px",
-              color: "#fff",
-              fontSize: "11px",
-              cursor: "pointer"
-            }}
-          >
-            今天
-          </button>
-          <button
-            onClick={() => setShowCalendar(false)}
-            style={{
-              flex: 1,
-              padding: "6px 8px",
-              backgroundColor: "#2a2a2a",
-              border: "1px solid #3a3a3a",
-              borderRadius: "4px",
-              color: "#b0b0b0",
-              fontSize: "11px",
-              cursor: "pointer"
-            }}
-          >
-            关闭
-          </button>
+        <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
+          <button onClick={() => setCalDate(new Date())} style={{ flex: 1, padding: "5px", backgroundColor: "#3B82F6", border: "none", borderRadius: "4px", color: "#fff", fontSize: "10px", cursor: "pointer" }}>今天</button>
+          <button onClick={() => setShowCalendar(false)} style={{ flex: 1, padding: "5px", backgroundColor: "#2a2a2a", border: "1px solid #3a3a3a", borderRadius: "4px", color: "#b0b0b0", fontSize: "10px", cursor: "pointer" }}>关闭</button>
         </div>
       </div>
     );
@@ -251,37 +172,39 @@ const Header: React.FC<HeaderProps> = ({ userEmail, userName, showCalendar, setS
         </div>
       </div>
 
-      {/* Right: Calendar button + popup */}
+      {/* Right: Calendar + date display */}
       <div style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
         alignItems: "flex-end",
-        justifyContent: "center",
-        gap: "12px",
+        justifyContent: "flex-end",
+        gap: "8px",
         position: "relative"
       }}>
-        <button
-          onClick={() => setShowCalendar(!showCalendar)}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: showCalendar ? "#2563EB" : "#3B82F6",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "13px",
-            color: "#fff",
-            fontWeight: "500"
-          }}
-        >
-          📅 Calendar
-        </button>
-
-        {showCalendar && (
-          <div style={{ position: "absolute", top: "48px", right: "0", zIndex: 1000 }}>
-            {renderDatePicker()}
-          </div>
-        )}
+        <div style={{ fontSize: "11px", color: "#666" }}>
+          {new Date().toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+        </div>
+        
+        {/* Calendar container - aligned with Edit Zone */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowCalendar(!showCalendar)}
+            style={{
+              padding: "6px 16px",
+              backgroundColor: showCalendar ? "#2563EB" : "#3B82F6",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+              color: "#fff"
+            }}
+          >
+            📅 日历
+          </button>
+          
+          {showCalendar && renderDatePicker()}
+        </div>
       </div>
     </header>
   );
