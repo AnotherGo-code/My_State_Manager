@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import type { Task, TaskUnit, Course } from "../App";
 
 interface EditZoneProps {

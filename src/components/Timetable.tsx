@@ -10,13 +10,55 @@ interface TimetableProps {
 
 const HOURS_START = 8;
 const HOURS_END = 22;
-const DAYS = 5; // Mon-Fri
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const DAYS = 7; // Mon-Sun
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// Helper: Convert hex color to rgba with given alpha
+function hexToRgba(hex: string, alpha: number): string {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length === 3) {
+    const r = parseInt(cleaned[0] + cleaned[0], 16);
+    const g = parseInt(cleaned[1] + cleaned[1], 16);
+    const b = parseInt(cleaned[2] + cleaned[2], 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  if (cleaned.length === 6) {
+    const r = parseInt(cleaned.substring(0, 2), 16);
+    const g = parseInt(cleaned.substring(2, 4), 16);
+    const b = parseInt(cleaned.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  return hex;
+}
+
+// Helper: Determine text contrast
+function getContrastColor(hex: string): string {
+  const cleaned = hex.replace("#", "");
+  let r: number, g: number, b: number;
+  if (cleaned.length === 3) {
+    r = parseInt(cleaned[0] + cleaned[0], 16);
+    g = parseInt(cleaned[1] + cleaned[1], 16);
+    b = parseInt(cleaned[2] + cleaned[2], 16);
+  } else {
+    r = parseInt(cleaned.substring(0, 2), 16);
+    g = parseInt(cleaned.substring(2, 4), 16);
+    b = parseInt(cleaned.substring(4, 6), 16);
+  }
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 140 ? "#1a1a1a" : "#ffffff";
+}
+
+// Helper: Get current day index (0=Mon, 6=Sun) to match day_of_week
+function getTodayIndex(): number {
+  const jsDay = new Date().getDay(); // 0=Sun, 1=Mon, ...
+  return jsDay === 0 ? 6 : jsDay - 1;
+}
 
 const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSelectedTaskUnit }) => {
   const totalHours = HOURS_END - HOURS_START;
+  const todayIndex = getTodayIndex();
 
-  // Group task units by day and hour for quick lookup
+  // Group task units by day and hour
   const taskUnitsBySlot = React.useMemo(() => {
     const map = new Map<string, TaskUnit[]>();
     taskUnits.forEach(tu => {
@@ -30,17 +72,18 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSel
     return map;
   }, [taskUnits]);
 
-  // Group courses by day and hour for background coloring
+  // Group courses by day and hour (0-6, Mon-Sun)
   const coursesBySlot = React.useMemo(() => {
-    const map = new Map<string, Course>();
+    const map = new Map<string, { course: Course; startsHere: boolean }>();
     courses.forEach(course => {
       const schedule = course.schedule || [];
       schedule.forEach(slot => {
         const startHour = parseInt(slot.start_time.split(":")[0]);
-        for (let h = startHour; h < HOURS_END && h < parseInt(slot.end_time.split(":")[0]); h++) {
+        const endHour = parseInt(slot.end_time.split(":")[0]);
+        for (let h = startHour; h < HOURS_END && h < endHour; h++) {
           if (slot.day_of_week >= 0 && slot.day_of_week < DAYS) {
             const key = `${slot.day_of_week}-${h}`;
-            if (!map.has(key)) map.set(key, course);
+            map.set(key, { course, startsHere: h === startHour });
           }
         }
       });
@@ -90,25 +133,32 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSel
             fontSize: "9px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "center",
+            position: "sticky",
+            left: 0,
+            zIndex: 10
           }}>
             Time
           </div>
 
-          {/* Day headers */}
-          {DAY_NAMES.map(day => (
+          {/* Day headers (highlight today) */}
+          {DAY_NAMES.map((day, idx) => (
             <div key={day} style={{
-              backgroundColor: "#252a3a",
+              backgroundColor: idx === todayIndex ? "#2a3a5a" : "#252a3a",
               padding: "6px 3px",
-              fontWeight: "400",
-              color: "#666",
+              fontWeight: idx === todayIndex ? "700" : "400",
+              color: idx === todayIndex ? "#fff" : "#666",
               textAlign: "center",
               fontSize: "9px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center"
+              justifyContent: "center",
+              borderBottom: idx === todayIndex ? "2px solid #3B82F6" : "none",
+              position: "sticky",
+              top: 0,
+              zIndex: 5
             }}>
-              {day}
+              {day}{idx === todayIndex ? " 🔵" : ""}
             </div>
           ))}
 
@@ -125,7 +175,10 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSel
                   color: "#666",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center"
+                  justifyContent: "center",
+                  position: "sticky",
+                  left: 0,
+                  zIndex: 10
                 }}>
                   {String(hour).padStart(2, "0")}:00
                 </div>
@@ -133,34 +186,67 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSel
                 {/* Day cells */}
                 {Array.from({ length: DAYS }, (_, dayIndex) => {
                   const slotKey = `${dayIndex}-${hour}`;
-                  const bgCourse = coursesBySlot.get(slotKey);
+                  const slotInfo = coursesBySlot.get(slotKey);
+                  const bgCourse = slotInfo?.course;
                   const slotTaskUnits = taskUnitsBySlot.get(slotKey) || [];
+                  const isToday = dayIndex === todayIndex;
+
+                  // Course background: 0.5 alpha
+                  const cellBg = bgCourse ? hexToRgba(bgCourse.color, 0.5) : (isToday ? "#252a40" : "#1f2435");
+                  const hoverBg = bgCourse ? hexToRgba(bgCourse.color, 0.7) : undefined;
+                  const textColor = bgCourse ? getContrastColor(bgCourse.color) : (isToday ? "#888" : "#666");
 
                   return (
                     <div
                       key={slotKey}
                       style={{
-                        backgroundColor: bgCourse ? bgCourse.color : "#1f2435",
+                        backgroundColor: cellBg,
                         minHeight: "40px",
                         padding: "3px",
                         cursor: "pointer",
                         position: "relative",
                         overflow: "visible",
                         borderBottom: "1px solid #2a3040",
-                        opacity: bgCourse ? 0.3 : 1,
-                        transition: "opacity 0.2s"
+                        // Today column highlight border
+                        borderLeft: isToday ? "2px solid #3B82F6" : "none",
+                        borderRight: isToday ? "2px solid #3B82F6" : "none",
+                        transition: "background-color 0.2s"
                       }}
                       onMouseEnter={e => {
-                        if (bgCourse) e.currentTarget.style.opacity = "0.5";
+                        if (hoverBg) {
+                          (e.currentTarget as HTMLElement).style.backgroundColor = hoverBg;
+                        }
                       }}
                       onMouseLeave={e => {
-                        if (bgCourse) e.currentTarget.style.opacity = "0.3";
+                        if (hoverBg) {
+                          (e.currentTarget as HTMLElement).style.backgroundColor = cellBg;
+                        }
                       }}
                     >
+                      {/* Course name (shown on first slot of each course block) */}
+                      {bgCourse && slotInfo?.startsHere && (
+                        <div style={{
+                          position: "absolute",
+                          top: "2px",
+                          left: "2px",
+                          right: "2px",
+                          fontSize: "8px",
+                          fontWeight: 600,
+                          color: textColor,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          zIndex: 1,
+                          pointerEvents: "none"
+                        }}>
+                          {bgCourse.name}
+                        </div>
+                      )}
+
                       {/* Task unit labels */}
                       {slotTaskUnits.map((tu, idx) => {
                         const task = tasks.find(t => t.id === tu.task_id);
-                        const taskInitial = task?.name?.charAt(0) || "?";
+                        const taskName = task?.name || "?";
 
                         return (
                           <div
@@ -171,36 +257,43 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSel
                             }}
                             style={{
                               position: "absolute",
-                              top: `${20 + idx * 18}px`,
+                              top: `${18 + idx * 18}px`,
                               left: "2px",
                               right: "2px",
                               height: "16px",
                               backgroundColor: task?.color || "#2a6dd3",
-                              color: "white",
+                              color: task ? getContrastColor(task.color) : "#fff",
                               borderRadius: "3px",
-                              padding: "1px 3px",
-                              fontSize: "7px",
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                              padding: "1px 4px",
+                              fontSize: "8px",
+                              fontWeight: 600,
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.6)",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              fontWeight: 500,
-                              opacity: tu.status === "done" ? 0.5 : 1,
+                              opacity: tu.status === "done" ? 0.4 : 1,
                               cursor: "pointer",
                               textDecoration: tu.status === "done" ? "line-through" : "none",
                               zIndex: 3,
-                              transition: "all 0.2s"
+                              transition: "all 0.15s",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              letterSpacing: "0.2px"
                             }}
                             onMouseEnter={e => {
-                              e.currentTarget.style.transform = "scale(1.05)";
-                              e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.6)";
+                              const el = e.currentTarget as HTMLElement;
+                              el.style.transform = "scale(1.05)";
+                              el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.7)";
                             }}
                             onMouseLeave={e => {
-                              e.currentTarget.style.transform = "scale(1)";
-                              e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.5)";
+                              const el = e.currentTarget as HTMLElement;
+                              el.style.transform = "scale(1)";
+                              el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.6)";
                             }}
+                            title={`${taskName} (+${tu.planned_amount})`}
                           >
-                            {taskInitial}+{tu.planned_amount}
+                            {taskName}
                           </div>
                         );
                       })}
