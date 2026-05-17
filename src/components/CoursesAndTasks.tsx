@@ -221,8 +221,7 @@ function createEmptyCourse(): Course {
     color: "#3B82F6",
     schedule: [],
     is_optional: false,
-    note: "",
-    created_at: ""
+    note: ""
   };
 }
 
@@ -233,8 +232,7 @@ function createEmptyTask(): Task {
     name: "",
     progress: 0,
     total: 100,
-    color: "#10B981",
-    created_at: ""
+    color: "#10B981"
   };
 }
 

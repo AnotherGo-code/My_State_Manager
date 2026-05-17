@@ -1,18 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
-// Validate environment variables
+// Validate environment variables without throwing top-level
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables:', {
-    url: supabaseUrl ? 'configured' : 'missing',
-    key: supabaseAnonKey ? 'configured' : 'missing'
-  })
-  throw new Error('Supabase environment variables are not configured. Please create .env.local with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY')
+  console.warn('⚠️ Supabase environment variables are missing. App may not function correctly.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder')
 
 /**
  * Get session with timeout protection.

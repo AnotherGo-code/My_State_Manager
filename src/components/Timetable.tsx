@@ -6,6 +6,7 @@ interface TimetableProps {
   tasks: Task[];
   courses: Course[];
   setSelectedTaskUnit: (tu: TaskUnit | null) => void;
+  setEditingTaskUnit: (tu: TaskUnit | null) => void;
 }
 
 const HOURS_START = 8;
@@ -14,7 +15,8 @@ const DAYS = 7; // Mon-Sun
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 // Helper: Convert hex color to rgba with given alpha
-function hexToRgba(hex: string, alpha: number): string {
+function hexToRgba(hex: string | undefined | null, alpha: number): string {
+  if (!hex) return `rgba(128, 128, 128, ${alpha})`;
   const cleaned = hex.replace("#", "");
   if (cleaned.length === 3) {
     const r = parseInt(cleaned[0] + cleaned[0], 16);
@@ -32,17 +34,20 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 // Helper: Determine text contrast
-function getContrastColor(hex: string): string {
+function getContrastColor(hex: string | undefined | null): string {
+  if (!hex) return "#ffffff";
   const cleaned = hex.replace("#", "");
   let r: number, g: number, b: number;
   if (cleaned.length === 3) {
     r = parseInt(cleaned[0] + cleaned[0], 16);
     g = parseInt(cleaned[1] + cleaned[1], 16);
     b = parseInt(cleaned[2] + cleaned[2], 16);
-  } else {
+  } else if (cleaned.length === 6) {
     r = parseInt(cleaned.substring(0, 2), 16);
     g = parseInt(cleaned.substring(2, 4), 16);
     b = parseInt(cleaned.substring(4, 6), 16);
+  } else {
+    return "#ffffff";
   }
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness > 140 ? "#1a1a1a" : "#ffffff";
@@ -54,15 +59,22 @@ function getTodayIndex(): number {
   return jsDay === 0 ? 6 : jsDay - 1;
 }
 
-const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSelectedTaskUnit }) => {
+const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSelectedTaskUnit, setEditingTaskUnit }) => {
   const totalHours = HOURS_END - HOURS_START;
   const todayIndex = getTodayIndex();
 
   // Group task units by day and hour
   const taskUnitsBySlot = React.useMemo(() => {
     const map = new Map<string, TaskUnit[]>();
+    if (!Array.isArray(taskUnits)) return map;
+
     taskUnits.forEach(tu => {
-      const hour = parseInt(tu.start_time.split(":")[0]);
+      if (!tu || !tu.start_time) return;
+      const hourPart = tu.start_time.split(":")[0];
+      if (!hourPart) return;
+      const hour = parseInt(hourPart);
+      if (isNaN(hour)) return;
+
       if (hour >= HOURS_START && hour < HOURS_END) {
         const key = `${tu.day_of_week}-${hour}`;
         if (!map.has(key)) map.set(key, []);
@@ -75,11 +87,22 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSel
   // Group courses by day and hour (0-6, Mon-Sun)
   const coursesBySlot = React.useMemo(() => {
     const map = new Map<string, { course: Course; startsHere: boolean }>();
+    if (!Array.isArray(courses)) return map;
+
     courses.forEach(course => {
-      const schedule = course.schedule || [];
+      if (!course) return;
+      const schedule = Array.isArray(course.schedule) ? course.schedule : [];
       schedule.forEach(slot => {
-        const startHour = parseInt(slot.start_time.split(":")[0]);
-        const endHour = parseInt(slot.end_time.split(":")[0]);
+        if (!slot || !slot.start_time || !slot.end_time) return;
+        
+        const startHourPart = slot.start_time.split(":")[0];
+        const endHourPart = slot.end_time.split(":")[0];
+        if (!startHourPart || !endHourPart) return;
+
+        const startHour = parseInt(startHourPart);
+        const endHour = parseInt(endHourPart);
+        if (isNaN(startHour) || isNaN(endHour)) return;
+
         for (let h = startHour; h < HOURS_END && h < endHour; h++) {
           if (slot.day_of_week >= 0 && slot.day_of_week < DAYS) {
             const key = `${slot.day_of_week}-${h}`;
@@ -199,6 +222,20 @@ const Timetable: React.FC<TimetableProps> = ({ taskUnits, tasks, courses, setSel
                   return (
                     <div
                       key={slotKey}
+                      onClick={() => {
+                        const startTime = `${String(hour).padStart(2, "0")}:00`;
+                        const endTime = `${String(hour + 1).padStart(2, "0")}:00`;
+                        setEditingTaskUnit({
+                          id: "",
+                          task_id: tasks[0]?.id || "",
+                          day_of_week: dayIndex,
+                          start_time: startTime,
+                          end_time: endTime,
+                          planned_amount: 1,
+                          completed_amount: 0,
+                          status: "pending"
+                        });
+                      }}
                       style={{
                         backgroundColor: cellBg,
                         minHeight: "40px",
