@@ -52,17 +52,19 @@ pnpm preview
 
 #### Supabase 项目配置
 
-创建 `.env.local` 文件，配置 Supabase 凭证：
+复制 `.env.example` 为 `.env.local` 并填入你的 Supabase 凭证：
 
-```env
-VITE_SUPABASE_URL=https://glmvftjwtrghfizwwkdb.supabase.co
-VITE_SUPABASE_ANON_KEY=sb_publishable_k8wGG5gvFD4V8Hga71FCaw_gTjMOrQH
+```bash
+cp .env.example .env.local
 ```
 
-**项目信息**：
+```env
+# .env.local（不会被提交到 Git）
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_publishable_key
+```
 
-- **项目ID**：`glmvftjwtrghfizwwkdb`
-- **Publishable Key**：`sb_publishable_k8wGG5gvFD4V8Hga71FCaw_gTjMOrQH`
+> 💡 在 [Supabase Dashboard](https://supabase.com/dashboard) → Settings → API 中获取你的项目 URL 和 Publishable Key。
 
 运行 `supabase_setup.sql` 初始化数据库表结构。
 
