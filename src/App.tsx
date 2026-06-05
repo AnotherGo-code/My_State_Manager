@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase, getSessionWithTimeout, signOut } from "./supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import Header from "./components/Header";
@@ -177,7 +177,6 @@ export default function App() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingTaskUnit, setEditingTaskUnit] = useState<TaskUnit | null>(null);
   const [newDiaryEntry, setNewDiaryEntry] = useState("");
-  const [hasLoadedRealData, setHasLoadedRealData] = useState(false);
 
   console.log("[App] Rendering state:", { loading, hasUser: !!user, coursesCount: courses.length });
 
@@ -198,25 +197,18 @@ export default function App() {
         supabase.from("diaries").select("*").eq("user_id", userId).order("created_at", { ascending: false })
       ]);
 
-      let anyDataLoaded = false;
-
       if (!coursesRes.error && coursesRes.data && coursesRes.data.length > 0) {
         setCourses(coursesRes.data.map(parseCourse));
-        anyDataLoaded = true;
       }
       if (!tasksRes.error && tasksRes.data && tasksRes.data.length > 0) {
         setTasks(tasksRes.data);
-        anyDataLoaded = true;
       }
       if (!taskUnitsRes.error && taskUnitsRes.data && taskUnitsRes.data.length > 0) {
         setTaskUnits(taskUnitsRes.data);
-        anyDataLoaded = true;
       }
       if (!diariesRes.error) {
         setDiaries(diariesRes.data || []);
       }
-
-      setHasLoadedRealData(anyDataLoaded);
     } catch (err) {
       console.error("[App] Fetch all data failed:", err);
     }
@@ -384,13 +376,6 @@ export default function App() {
     await fetchAllData();
   }, [user, fetchAllData]);
 
-  const initializeSampleData = useCallback(async () => {
-    if (!user) return;
-    if (!confirm("初始化示例数据？")) return;
-    // Simplified for brevity in diagnostic version
-    alert("初始化功能暂不可用，请手动添加数据。");
-  }, [user]);
-
   // =============================================
   // Lifecycle
   // =============================================
@@ -428,7 +413,6 @@ export default function App() {
       setTasks(demoTasks);
       setTaskUnits(demoTaskUnits);
       setDiaries([]);
-      setHasLoadedRealData(false);
     }
   }, [user, fetchAllData]);
 
