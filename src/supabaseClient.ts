@@ -1,14 +1,27 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const isDev = import.meta.env.DEV
+
+// In dev mode, use Vite proxy (browser → localhost → Supabase).
+// In production, connect to Supabase directly.
+const supabaseUrl = isDev
+  ? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173')
+  : (import.meta.env.VITE_SUPABASE_URL || '')
+
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 // Validate environment variables without throwing top-level
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Supabase environment variables are missing. App may not function correctly.')
+if (!supabaseAnonKey) {
+  console.warn('⚠️ Supabase anon key is missing. App may not function correctly.')
+}
+if (!isDev && !import.meta.env.VITE_SUPABASE_URL) {
+  console.warn('⚠️ VITE_SUPABASE_URL is missing. App may not function correctly.')
 }
 
-export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder')
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder'
+)
 
 /**
  * Get session with timeout protection.
