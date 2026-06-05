@@ -1,21 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 
-const isDev = import.meta.env.DEV
-
-// In dev mode, use Vite proxy (browser → localhost → Supabase).
-// In production, connect to Supabase directly.
-const supabaseUrl = isDev
-  ? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173')
-  : (import.meta.env.VITE_SUPABASE_URL || '')
+// Always use relative URLs so requests go through the current origin.
+// The proxy/rewrite layer handles forwarding to the real Supabase backend:
+//   Dev:  Vite proxy   → localhost     → supabase.co
+//   Prod: Vercel rewrites → vercel.app → supabase.co
+const supabaseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
-// Validate environment variables without throwing top-level
 if (!supabaseAnonKey) {
   console.warn('⚠️ Supabase anon key is missing. App may not function correctly.')
-}
-if (!isDev && !import.meta.env.VITE_SUPABASE_URL) {
-  console.warn('⚠️ VITE_SUPABASE_URL is missing. App may not function correctly.')
 }
 
 export const supabase = createClient(
