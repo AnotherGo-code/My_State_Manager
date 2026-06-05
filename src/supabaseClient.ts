@@ -8,8 +8,10 @@ const supabaseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
-if (!supabaseAnonKey) {
-  console.warn('⚠️ Supabase anon key is missing. App may not function correctly.')
+export const isAnonKeyMissing = !supabaseAnonKey
+
+if (isAnonKeyMissing) {
+  console.warn('⚠️ VITE_SUPABASE_ANON_KEY is missing. Auth and API calls will fail.')
 }
 
 export const supabase = createClient(

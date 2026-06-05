@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase, getSessionWithTimeout, signOut } from "./supabaseClient";
+import { supabase, getSessionWithTimeout, signOut, isAnonKeyMissing } from "./supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -487,6 +487,41 @@ export default function App() {
   }
 
   if (!user) {
+    // Show a clear configuration error if the Supabase anon key is missing
+    if (isAnonKeyMissing) {
+      return (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#0f0f0f", color: "#fff" }}>
+          <div style={{ width: "100%", maxWidth: "500px", padding: "20px" }}>
+            <h1 style={{ textAlign: "center" }}>🎯 时间管理器</h1>
+            <div style={{
+              backgroundColor: "rgba(251, 146, 60, 0.15)",
+              border: "1px solid rgba(251, 146, 60, 0.4)",
+              borderRadius: "8px",
+              padding: "20px",
+              marginTop: "20px",
+              color: "#fdba74",
+              fontSize: "14px",
+              lineHeight: 1.8
+            }}>
+              <h3 style={{ margin: "0 0 12px 0", color: "#fb923c" }}>⚙️ 缺少环境变量配置</h3>
+              <p style={{ margin: "0 0 12px 0" }}>
+                未检测到 <code style={{ backgroundColor: "#333", padding: "2px 6px", borderRadius: "3px" }}>VITE_SUPABASE_ANON_KEY</code> 环境变量。
+              </p>
+              <p style={{ margin: "0 0 12px 0", fontWeight: "bold" }}>
+                请在 Vercel 项目设置中添加：
+              </p>
+              <div style={{ backgroundColor: "#1a1a1a", padding: "12px", borderRadius: "6px", fontSize: "12px", fontFamily: "monospace" }}>
+                VITE_SUPABASE_ANON_KEY=sb_publishable_k8wGG5gvFD4V8Hga71FCaw_gTjMOrQH
+              </div>
+              <p style={{ margin: "12px 0 0 0", fontSize: "12px", color: "#999" }}>
+                Vercel Dashboard → Settings → Environment Variables → 添加上述变量 → 重新部署
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#0f0f0f", color: "#fff" }}>
         <div style={{ width: "100%", maxWidth: "400px", padding: "20px" }}>
