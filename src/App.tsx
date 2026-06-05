@@ -177,6 +177,8 @@ export default function App() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingTaskUnit, setEditingTaskUnit] = useState<TaskUnit | null>(null);
   const [newDiaryEntry, setNewDiaryEntry] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   console.log("[App] Rendering state:", { loading, hasUser: !!user, coursesCount: courses.length });
 
@@ -425,6 +427,38 @@ export default function App() {
     setUser(null);
   }, []);
 
+  const handleAuth = useCallback(async () => {
+    setAuthLoading(true);
+    setAuthError(null);
+
+    try {
+      if (isLogin) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          setAuthError(error.message);
+        } else if (!data.session) {
+          setAuthError("登录失败，请检查邮箱和密码。");
+        }
+        // session 创建后 onAuthStateChange 会自动设置 user
+      } else {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          setAuthError(error.message);
+        } else if (data.session) {
+          // 注册成功，session 已创建，onAuthStateChange 会自动设置 user
+        } else {
+          // 注册成功但需要邮箱验证
+          setAuthError("注册成功！请检查邮箱并点击确认链接。");
+        }
+      }
+    } catch (err: any) {
+      console.error("[App] Auth error:", err);
+      setAuthError(err?.message || "认证失败，请检查网络连接。");
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [email, password, isLogin]);
+
   if (renderError) {
     return (
       <div style={{ padding: "40px", backgroundColor: "#1a1a1a", color: "white", height: "100vh" }}>
@@ -457,10 +491,65 @@ export default function App() {
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#0f0f0f", color: "#fff" }}>
         <div style={{ width: "100%", maxWidth: "400px", padding: "20px" }}>
           <h1 style={{ textAlign: "center" }}>🎯 时间管理器</h1>
-          <input type="email" placeholder="邮箱" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "12px", marginBottom: "10px", backgroundColor: "#1a1a1a", color: "#fff", border: "1px solid #333" }} />
-          <input type="password" placeholder="密码" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "100%", padding: "12px", marginBottom: "20px", backgroundColor: "#1a1a1a", color: "#fff", border: "1px solid #333" }} />
-          <button onClick={() => (isLogin ? supabase.auth.signInWithPassword({ email, password }) : supabase.auth.signUp({ email, password }))} style={{ width: "100%", padding: "12px", backgroundColor: "#2a6dd3", color: "#fff", border: "none", cursor: "pointer" }}>{isLogin ? "登录" : "注册"}</button>
-          <button onClick={() => setIsLogin(!isLogin)} style={{ width: "100%", background: "none", color: "#2a6dd3", border: "none", marginTop: "10px", cursor: "pointer" }}>{isLogin ? "注册账号" : "登录账号"}</button>
+
+          {/* Error message */}
+          {authError && (
+            <div style={{
+              backgroundColor: "rgba(220, 53, 69, 0.15)",
+              border: "1px solid rgba(220, 53, 69, 0.4)",
+              borderRadius: "6px",
+              padding: "10px 12px",
+              marginBottom: "12px",
+              color: "#f87171",
+              fontSize: "13px",
+              lineHeight: 1.5
+            }}>
+              ⚠️ {authError}
+            </div>
+          )}
+
+          <input
+            type="email"
+            placeholder="邮箱"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setAuthError(null); }}
+            onKeyDown={e => { if (e.key === "Enter") handleAuth(); }}
+            disabled={authLoading}
+            style={{ width: "100%", padding: "12px", marginBottom: "10px", backgroundColor: "#1a1a1a", color: "#fff", border: "1px solid #333", borderRadius: "4px", fontSize: "14px", boxSizing: "border-box", opacity: authLoading ? 0.5 : 1 }}
+          />
+          <input
+            type="password"
+            placeholder="密码"
+            value={password}
+            onChange={e => { setPassword(e.target.value); setAuthError(null); }}
+            onKeyDown={e => { if (e.key === "Enter") handleAuth(); }}
+            disabled={authLoading}
+            style={{ width: "100%", padding: "12px", marginBottom: "20px", backgroundColor: "#1a1a1a", color: "#fff", border: "1px solid #333", borderRadius: "4px", fontSize: "14px", boxSizing: "border-box", opacity: authLoading ? 0.5 : 1 }}
+          />
+          <button
+            onClick={handleAuth}
+            disabled={authLoading || !email.trim() || !password.trim()}
+            style={{
+              width: "100%",
+              padding: "12px",
+              backgroundColor: authLoading || !email.trim() || !password.trim() ? "#555" : "#2a6dd3",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              cursor: authLoading || !email.trim() || !password.trim() ? "not-allowed" : "pointer",
+              fontSize: "14px",
+              fontWeight: "500"
+            }}
+          >
+            {authLoading ? "⏳ 处理中..." : isLogin ? "登录" : "注册"}
+          </button>
+          <button
+            onClick={() => { setIsLogin(!isLogin); setAuthError(null); }}
+            disabled={authLoading}
+            style={{ width: "100%", background: "none", color: authLoading ? "#555" : "#2a6dd3", border: "none", marginTop: "10px", cursor: authLoading ? "not-allowed" : "pointer", fontSize: "13px" }}
+          >
+            {isLogin ? "没有账号？去注册" : "已有账号？去登录"}
+          </button>
         </div>
       </div>
     );
