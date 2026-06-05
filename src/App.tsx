@@ -441,7 +441,14 @@ export default function App() {
         }
         // session 创建后 onAuthStateChange 会自动设置 user
       } else {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        // Use current origin as redirect URL so the confirmation email
+        // points to the correct deployment (localhost or Vercel)
+        const redirectUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: redirectUrl }
+        });
         if (error) {
           setAuthError(error.message);
         } else if (data.session) {
