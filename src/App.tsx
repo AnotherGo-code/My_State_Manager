@@ -450,7 +450,12 @@ export default function App() {
           options: { emailRedirectTo: redirectUrl }
         });
         if (error) {
-          setAuthError(error.message);
+          // Provide friendly guidance for common Supabase errors
+          if (error.message.toLowerCase().includes('rate') || error.message.toLowerCase().includes('limit')) {
+            setAuthError("邮件发送太频繁，请稍等几分钟再试。提示：可以先关闭邮箱验证来绕过此限制（见 Supabase 后台设置）。");
+          } else {
+            setAuthError(error.message);
+          }
         } else if (data.session) {
           // 注册成功，session 已创建，onAuthStateChange 会自动设置 user
         } else {
